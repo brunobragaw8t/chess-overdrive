@@ -1,8 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "react"
-  ],
+  "plugins": ["react"],
   "categories": {},
   "rules": {
     "react/rules-of-hooks": "error"
