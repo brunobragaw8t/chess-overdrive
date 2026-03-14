@@ -1,19 +1,16 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useConvexAuth } from "convex/react";
+import { LoadingSpinner } from "../components/ui/loading-spinner";
 
 export const Route = createFileRoute("/_authenticated")({
-  component: RootComponent,
+  component: AuthenticatedLayout,
 });
 
-function RootComponent() {
+function AuthenticatedLayout() {
   const { isAuthenticated, isLoading } = useConvexAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg text-gray-500">Loading...</p>
-      </div>
-    );
+    return <LoadingSpinner label="AUTHENTICATING" />;
   }
 
   if (!isAuthenticated) {

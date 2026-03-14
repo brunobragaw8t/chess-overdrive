@@ -1,37 +1,76 @@
+import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../convex/_generated/api";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDivider } from "../../components/ui/card";
+import { LoadingSpinner } from "../../components/ui/loading-spinner";
+import { MonoLabel } from "../../components/ui/mono-label";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: RootComponent,
 });
+
+const placeholderCards = ["FORMATIONS", "MATCHMAKING", "UPGRADES", "MATCH HISTORY"] as const;
 
 function RootComponent() {
   const user = useQuery(api.users.getCurrentUser);
   const { signOut } = useAuthActions();
 
   if (user === undefined) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg text-gray-500">Loading...</p>
-      </div>
-    );
+    return <LoadingSpinner label="LOADING_USER_DATA" />;
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-bold">Chess Overdrive</h1>
+    <>
+      <header className="animate-stamp border-border-hard bg-bg-raised flex h-16 items-center justify-between border-b-4 px-8">
+        <MonoLabel size="md" tone="accent" weight="bold">
+          // CHESS_OVERDRIVE
+        </MonoLabel>
 
-      <p className="text-lg text-gray-600">Welcome, {user?.name ?? "Player"}!</p>
+        <Button variant="danger" size="sm" onClick={() => void signOut()}>
+          SIGN OUT
+        </Button>
+      </header>
 
-      <button
-        type="button"
-        onClick={() => void signOut()}
-        className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300"
-      >
-        Sign out
-      </button>
-    </div>
+      <main className="mx-auto max-w-240 px-8 py-16">
+        <Card className="animate-stamp border-l-accent border-l-4">
+          <CardContent>
+            <MonoLabel size="md" tone="muted" tracking="wider">
+              WELCOME BACK,
+            </MonoLabel>
+
+            <h1 className="font-display mt-2 text-[3rem] font-bold tracking-[-0.02em] text-white uppercase">
+              {user?.name ?? "Player"}
+            </h1>
+
+            <CardDivider className="my-6" />
+
+            <div>
+              <MonoLabel>STATUS: </MonoLabel>
+              <MonoLabel tone="success">ONLINE</MonoLabel>
+              <MonoLabel> // </MonoLabel>
+              <MonoLabel tone="muted">UNRANKED</MonoLabel>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {placeholderCards.map((label, i) => (
+            <div
+              key={label}
+              className="animate-stamp border-border hover:border-accent/30 flex min-h-30 flex-col items-center justify-center border-2 border-dashed p-6 transition-colors duration-200"
+              style={{ animationDelay: `${100 + i * 50}ms` }}
+            >
+              <MonoLabel tracking="wider">{label}</MonoLabel>
+
+              <div className="border-border mt-3 border-t pt-3">
+                <MonoLabel size="xs">{`COMING SOON`}</MonoLabel>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </>
   );
 }
