@@ -71,7 +71,7 @@ function RootComponent() {
 
             {!isEditing ? (
               <div className="mt-3 flex items-center justify-between">
-                <h2 className="font-display text-2xl font-bold tracking-wide text-white uppercase">
+                <h2 className="font-display text-2xl font-bold tracking-wide text-white">
                   {user?.name ?? "Player"}
                 </h2>
 
@@ -86,7 +86,7 @@ function RootComponent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   maxLength={NAME_MAX_LENGTH}
-                  className="border-border-hard bg-bg font-display focus:border-accent w-full border-2 px-4 py-3 text-xl font-bold tracking-wide text-white uppercase outline-none"
+                  className="border-border-hard bg-bg font-display focus:border-accent w-full border-2 px-4 py-3 text-xl font-bold tracking-wide text-white outline-none"
                   autoFocus
                 />
 

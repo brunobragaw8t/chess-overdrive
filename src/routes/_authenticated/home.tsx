@@ -30,7 +30,7 @@ function RootComponent() {
               WELCOME BACK,
             </MonoLabel>
 
-            <h1 className="font-display mt-2 text-[3rem] font-bold tracking-[-0.02em] text-white uppercase">
+            <h1 className="font-display mt-2 text-[3rem] font-bold tracking-[-0.02em] text-white">
               {user?.name ?? "Player"}
             </h1>
 
