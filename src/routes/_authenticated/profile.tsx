@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { type SubmitEvent, useEffect, useState } from "react";
 import { api } from "../../../convex/_generated/api";
-import { NAME_MAX_LENGTH } from "../../../convex/users";
 import { AppHeader } from "../../components/app-header";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDivider } from "../../components/ui/card";
 import { LoadingSpinner } from "../../components/ui/loading-spinner";
 import { MonoLabel } from "../../components/ui/mono-label";
+import { NAME_MAX_LENGTH } from "../../constants/users";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: RootComponent,

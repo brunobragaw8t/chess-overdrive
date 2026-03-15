@@ -1,6 +1,7 @@
-import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { ConvexError, v } from "convex/values";
+import { NAME_MAX_LENGTH } from "../src/constants/users";
+import { mutation, query } from "./_generated/server";
 
 export const getCurrentUser = query({
   args: {},
@@ -16,8 +17,6 @@ export const getCurrentUser = query({
     return user;
   },
 });
-
-export const NAME_MAX_LENGTH = 32;
 
 export const updateProfile = mutation({
   args: {
