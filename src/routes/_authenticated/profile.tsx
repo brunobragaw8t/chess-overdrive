@@ -9,6 +9,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDivider } from "../../components/ui/card";
 import { LoadingSpinner } from "../../components/ui/loading-spinner";
 import { MonoLabel } from "../../components/ui/mono-label";
+import { UserAvatar } from "../../components/ui/user-avatar";
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE, NAME_MAX_LENGTH } from "../../constants/users";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -141,18 +142,8 @@ function RootComponent() {
             </MonoLabel>
 
             <div className="mt-4 flex items-center gap-6">
-              <div className="group relative">
-                <div className="border-border-hard bg-bg relative h-24 w-24 overflow-hidden border-[3px]">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="bg-bg-inset flex h-full w-full items-center justify-center">
-                      <span className="font-display text-text-dim text-3xl font-bold">
-                        {user?.name?.charAt(0).toUpperCase() ?? "?"}
-                      </span>
-                    </div>
-                  )}
-
+              <div className="group">
+                <UserAvatar size="lg" avatarUrl={avatarUrl} name={user?.name}>
                   {!avatar.isLoading && (
                     <button
                       type="button"
@@ -169,12 +160,7 @@ function RootComponent() {
                       <div className="border-accent h-5 w-5 animate-spin border-2 border-t-transparent" />
                     </div>
                   )}
-                </div>
-
-                <div className="border-accent absolute -top-1 -left-1 h-2 w-2 border-t-2 border-l-2" />
-                <div className="border-accent absolute -top-1 -right-1 h-2 w-2 border-t-2 border-r-2" />
-                <div className="border-accent absolute -bottom-1 -left-1 h-2 w-2 border-b-2 border-l-2" />
-                <div className="border-accent absolute -right-1 -bottom-1 h-2 w-2 border-r-2 border-b-2" />
+                </UserAvatar>
               </div>
 
               <div className="flex flex-col gap-2">

@@ -5,6 +5,7 @@ import { AppHeader } from "../../components/app-header";
 import { Card, CardContent, CardDivider } from "../../components/ui/card";
 import { LoadingSpinner } from "../../components/ui/loading-spinner";
 import { MonoLabel } from "../../components/ui/mono-label";
+import { UserAvatar } from "../../components/ui/user-avatar";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: RootComponent,
@@ -27,24 +28,7 @@ function RootComponent() {
         <Card className="animate-stamp border-l-accent border-l-4">
           <CardContent>
             <div className="flex items-center gap-6">
-              <div className="relative shrink-0">
-                <div className="border-border-hard bg-bg h-16 w-16 overflow-hidden border-[3px]">
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="bg-bg-inset flex h-full w-full items-center justify-center">
-                      <span className="font-display text-text-dim text-xl font-bold">
-                        {user?.name?.charAt(0).toUpperCase() ?? "?"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-accent absolute -top-0.75 -left-0.75 h-1.5 w-1.5 border-t-2 border-l-2" />
-                <div className="border-accent absolute -top-0.75 -right-0.75 h-1.5 w-1.5 border-t-2 border-r-2" />
-                <div className="border-accent absolute -bottom-0.75 -left-0.75 h-1.5 w-1.5 border-b-2 border-l-2" />
-                <div className="border-accent absolute -right-0.75 -bottom-0.75 h-1.5 w-1.5 border-r-2 border-b-2" />
-              </div>
+              <UserAvatar size="md" avatarUrl={user?.avatarUrl} name={user?.name} />
 
               <div className="min-w-0">
                 <MonoLabel size="md" tone="muted" tracking="wider">
