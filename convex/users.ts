@@ -28,6 +28,11 @@ export const updateProfile = mutation({
       throw new ConvexError("Not authenticated");
     }
 
+    const user = await ctx.db.get(userId);
+    if (user === null || user.isDeleted) {
+      throw new ConvexError("Not authenticated");
+    }
+
     const trimmed = args.name.trim();
     if (trimmed.length === 0) {
       throw new ConvexError("Name cannot be empty");

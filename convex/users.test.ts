@@ -42,6 +42,25 @@ describe("updateProfile", () => {
     await expect(t.mutation(api.users.updateProfile, { name: "NewName" })).rejects.toThrow();
   });
 
+  it("rejects calls from soft-deleted users", async () => {
+    const t = convexTest(schema, modules);
+
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", {
+        name: "Alice",
+        email: "alice@testers.com",
+        isDeleted: true,
+      });
+    });
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(asAlice.mutation(api.users.updateProfile, { name: "NewName" })).rejects.toThrow();
+  });
+
   it("rejects empty or whitespace-only names", async () => {
     const t = convexTest(schema, modules);
 
