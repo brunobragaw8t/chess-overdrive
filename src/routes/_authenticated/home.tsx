@@ -1,8 +1,7 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Button } from "../../components/ui/button";
+import { AppHeader } from "../../components/app-header";
 import { Card, CardContent, CardDivider } from "../../components/ui/card";
 import { LoadingSpinner } from "../../components/ui/loading-spinner";
 import { MonoLabel } from "../../components/ui/mono-label";
@@ -15,7 +14,6 @@ const placeholderCards = ["FORMATIONS", "MATCHMAKING", "UPGRADES", "MATCH HISTOR
 
 function RootComponent() {
   const user = useQuery(api.users.getCurrentUser);
-  const { signOut } = useAuthActions();
 
   if (user === undefined) {
     return <LoadingSpinner label="LOADING_USER_DATA" />;
@@ -23,15 +21,7 @@ function RootComponent() {
 
   return (
     <>
-      <header className="animate-stamp border-border-hard bg-bg-raised flex h-16 items-center justify-between border-b-4 px-8">
-        <MonoLabel size="md" tone="accent" weight="bold">
-          // CHESS_OVERDRIVE
-        </MonoLabel>
-
-        <Button variant="danger" size="sm" onClick={() => void signOut()}>
-          SIGN OUT
-        </Button>
-      </header>
+      <AppHeader />
 
       <main className="mx-auto max-w-240 px-8 py-16">
         <Card className="animate-stamp border-l-accent border-l-4">
