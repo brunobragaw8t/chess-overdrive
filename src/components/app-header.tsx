@@ -1,8 +1,11 @@
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { cn } from "../lib/utils";
-import { Button } from "./ui/button";
+import { DropdownMenu } from "./ui/dropdown-menu";
 import { MonoLabel } from "./ui/mono-label";
+import { UserAvatar } from "./ui/user-avatar";
 
 function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
   const router = useRouterState();
@@ -23,6 +26,8 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
 
 export function AppHeader() {
   const { signOut } = useAuthActions();
+  const user = useQuery(api.users.getCurrentUser);
+  const navigate = useNavigate();
 
   return (
     <header className="border-border-hard bg-bg-raised flex h-16 items-center justify-between border-b-4 px-8">
@@ -33,13 +38,28 @@ export function AppHeader() {
 
         <nav className="flex items-center gap-6">
           <NavLink to="/home">DASHBOARD</NavLink>
-          <NavLink to="/profile">PROFILE</NavLink>
         </nav>
       </div>
 
-      <Button variant="danger" size="sm" onClick={() => void signOut()}>
-        SIGN OUT
-      </Button>
+      <DropdownMenu
+        trigger={
+          <span className="group flex items-center gap-3">
+            <MonoLabel
+              size="xs"
+              weight="bold"
+              className="group-hover:text-text hidden transition-colors duration-150 sm:block"
+            >
+              {user?.name ?? "Player"}
+            </MonoLabel>
+
+            <UserAvatar size="sm" avatarUrl={user?.avatarUrl} name={user?.name} />
+          </span>
+        }
+        items={[
+          { label: "Profile", onClick: () => void navigate({ to: "/profile" }) },
+          { label: "Sign out", onClick: () => void signOut(), variant: "danger" },
+        ]}
+      />
     </header>
   );
 }
