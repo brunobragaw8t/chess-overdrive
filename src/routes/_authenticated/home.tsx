@@ -26,13 +26,36 @@ function RootComponent() {
       <main className="mx-auto max-w-240 px-8 py-16">
         <Card className="animate-stamp border-l-accent border-l-4">
           <CardContent>
-            <MonoLabel size="md" tone="muted" tracking="wider">
-              WELCOME BACK,
-            </MonoLabel>
+            <div className="flex items-center gap-6">
+              <div className="relative shrink-0">
+                <div className="border-border-hard bg-bg h-16 w-16 overflow-hidden border-[3px]">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="bg-bg-inset flex h-full w-full items-center justify-center">
+                      <span className="font-display text-text-dim text-xl font-bold">
+                        {user?.name?.charAt(0).toUpperCase() ?? "?"}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-            <h1 className="font-display mt-2 text-[3rem] font-bold tracking-[-0.02em] text-white">
-              {user?.name ?? "Player"}
-            </h1>
+                <div className="border-accent absolute -top-0.75 -left-0.75 h-1.5 w-1.5 border-t-2 border-l-2" />
+                <div className="border-accent absolute -top-0.75 -right-0.75 h-1.5 w-1.5 border-t-2 border-r-2" />
+                <div className="border-accent absolute -bottom-0.75 -left-0.75 h-1.5 w-1.5 border-b-2 border-l-2" />
+                <div className="border-accent absolute -right-0.75 -bottom-0.75 h-1.5 w-1.5 border-r-2 border-b-2" />
+              </div>
+
+              <div className="min-w-0">
+                <MonoLabel size="md" tone="muted" tracking="wider">
+                  WELCOME BACK,
+                </MonoLabel>
+
+                <h1 className="font-display mt-1 truncate text-[3rem] leading-tight font-bold tracking-[-0.02em] text-white">
+                  {user?.name ?? "Player"}
+                </h1>
+              </div>
+            </div>
 
             <CardDivider className="my-6" />
 

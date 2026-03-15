@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
 describe("getCurrentUser", () => {
@@ -99,6 +100,66 @@ describe("updateProfile", () => {
     const user = await asAlice.query(api.users.getCurrentUser);
     expect(user).not.toBeNull();
     expect(user!.name).toBe("Bob");
+  });
+});
+
+describe("generateAvatarUploadUrl", () => {
+  it("rejects unauthenticated calls", async () => {
+    const t = convexTest(schema, modules);
+
+    await expect(t.mutation(api.users.generateAvatarUploadUrl)).rejects.toThrow();
+  });
+
+  it("rejects calls from soft-deleted users", async () => {
+    const t = convexTest(schema, modules);
+
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", {
+        name: "Alice",
+        email: "alice@testers.com",
+        isDeleted: true,
+      });
+    });
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(asAlice.mutation(api.users.generateAvatarUploadUrl)).rejects.toThrow();
+  });
+});
+
+describe("saveAvatar", () => {
+  it("rejects unauthenticated calls", async () => {
+    const t = convexTest(schema, modules);
+
+    const storageId = "kg2b0p1cxs0cmf1t4fgrdg1m0h72gn3w" as Id<"_storage">;
+    await expect(t.mutation(api.users.saveAvatar, { storageId })).rejects.toThrow();
+  });
+
+  it("stores avatar ID and getCurrentUser returns user with avatarUrl", async () => {
+    const t = convexTest(schema, modules);
+
+    const storageId = await t.run(async (ctx) => {
+      return await ctx.storage.store(new Blob(["fake-image"], { type: "image/png" }));
+    });
+
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", { name: "Alice", email: "alice@testers.com" });
+    });
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await asAlice.mutation(api.users.saveAvatar, { storageId });
+
+    const user = await asAlice.query(api.users.getCurrentUser);
+    expect(user).not.toBeNull();
+    expect(user!.avatarUrl).toBeTypeOf("string");
+    expect(user!.avatarUrl).toContain("http");
   });
 });
 
