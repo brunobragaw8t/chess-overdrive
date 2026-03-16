@@ -5,7 +5,7 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 
 /**
- * Verifies the caller is an authenticated, non-deleted user.
+ * Verifies the caller is an authenticated user.
  * Throws ConvexError if not. Returns the user document.
  */
 export async function authGuard(ctx: MutationCtx) {
@@ -15,7 +15,7 @@ export async function authGuard(ctx: MutationCtx) {
   }
 
   const user = await ctx.db.get(userId);
-  if (user === null || user.isDeleted) {
+  if (user === null) {
     throw new ConvexError("Not authenticated");
   }
 
@@ -30,7 +30,7 @@ export const getCurrentUser = query({
       return null;
     }
     const user = await ctx.db.get(userId);
-    if (user === null || user.isDeleted) {
+    if (user === null) {
       return null;
     }
 
@@ -75,5 +75,50 @@ export const updateProfile = mutation({
     }
 
     await ctx.db.patch(user._id, { name: trimmed });
+  },
+});
+
+export const deleteAccount = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authGuard(ctx);
+
+    const accounts = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id))
+      .collect();
+
+    for (const account of accounts) {
+      const verificationCodes = await ctx.db
+        .query("authVerificationCodes")
+        .withIndex("accountId", (q) => q.eq("accountId", account._id))
+        .collect();
+
+      for (const code of verificationCodes) {
+        await ctx.db.delete(code._id);
+      }
+
+      await ctx.db.delete(account._id);
+    }
+
+    const sessions = await ctx.db
+      .query("authSessions")
+      .withIndex("userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    for (const session of sessions) {
+      const refreshTokens = await ctx.db
+        .query("authRefreshTokens")
+        .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
+        .collect();
+
+      for (const token of refreshTokens) {
+        await ctx.db.delete(token._id);
+      }
+
+      await ctx.db.delete(session._id);
+    }
+
+    await ctx.db.delete(user._id);
   },
 });

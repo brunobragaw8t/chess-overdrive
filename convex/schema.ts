@@ -16,7 +16,6 @@ const schema = defineSchema({
     // Custom fields
     avatarStorageId: v.optional(v.id("_storage")),
     totalWins: v.optional(v.number()),
-    isDeleted: v.optional(v.boolean()),
     createdAt: v.optional(v.number()),
   }).index("email", ["email"]),
 });

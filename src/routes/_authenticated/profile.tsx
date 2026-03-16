@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { FiUpload } from "react-icons/fi";
@@ -114,11 +115,36 @@ function useNameEditor(currentName: string | undefined) {
   };
 }
 
+function useAccountDeletion() {
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const deleteAccount = useMutation(api.users.deleteAccount);
+  const { signOut } = useAuthActions();
+  const router = useRouter();
+
+  async function handleDelete() {
+    setIsLoading(true);
+
+    try {
+      await deleteAccount();
+      await signOut();
+      await router.navigate({ to: "/" });
+    } catch {
+      setIsLoading(false);
+      setIsConfirming(false);
+    }
+  }
+
+  return { isConfirming, setIsConfirming, isLoading, handleDelete };
+}
+
 function RootComponent() {
   const user = useQuery(api.users.getCurrentUser);
 
   const avatar = useAvatarUpload();
   const nameEditor = useNameEditor(user?.name);
+  const accountDeletion = useAccountDeletion();
 
   if (user === undefined) {
     return <LoadingSpinner label="LOADING_PROFILE" />;
@@ -258,6 +284,50 @@ function RootComponent() {
             </MonoLabel>
 
             <p className="text-text-muted mt-3 font-mono text-sm">{user?.email ?? "No email"}</p>
+
+            <CardDivider className="my-6" />
+
+            <MonoLabel tone="muted" tracking="wider">
+              DANGER ZONE
+            </MonoLabel>
+
+            {!accountDeletion.isConfirming ? (
+              <div className="mt-3">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => accountDeletion.setIsConfirming(true)}
+                >
+                  DELETE ACCOUNT
+                </Button>
+              </div>
+            ) : (
+              <div className="border-danger/30 mt-3 border-2 p-4">
+                <p className="font-mono text-sm text-white">
+                  This action is permanent. Your account and all associated data will be deleted.
+                </p>
+
+                <div className="mt-4 flex gap-3">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => void accountDeletion.handleDelete()}
+                    disabled={accountDeletion.isLoading}
+                  >
+                    {accountDeletion.isLoading ? "DELETING..." : "CONFIRM DELETE"}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => accountDeletion.setIsConfirming(false)}
+                    disabled={accountDeletion.isLoading}
+                  >
+                    CANCEL
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
