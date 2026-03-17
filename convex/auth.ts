@@ -1,5 +1,6 @@
 import Google from "@auth/core/providers/google";
 import { convexAuth } from "@convex-dev/auth/server";
+import { PIECE_TYPES } from "./pieceTypes";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Google],
@@ -19,23 +20,21 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       }
 
       const now = Date.now();
-      const rookId = await ctx.db.insert("pieces", { userId, pieceType: "rook", createdAt: now });
-      const knightId = await ctx.db.insert("pieces", {
-        userId,
-        pieceType: "knight",
-        createdAt: now,
-      });
-      const bishopId = await ctx.db.insert("pieces", {
-        userId,
-        pieceType: "bishop",
-        createdAt: now,
-      });
-      const queenId = await ctx.db.insert("pieces", { userId, pieceType: "queen", createdAt: now });
-      const kingId = await ctx.db.insert("pieces", { userId, pieceType: "king", createdAt: now });
+      const pieceIds = [];
+
+      for (const { type } of PIECE_TYPES) {
+        const id = await ctx.db.insert("pieces", {
+          userId,
+          pieceType: type,
+          createdAt: now,
+        });
+
+        pieceIds.push(id);
+      }
 
       await ctx.db.insert("formations", {
         userId,
-        positions: [rookId, knightId, bishopId, kingId, queenId, null, null, null],
+        positions: [...pieceIds, null, null, null],
       });
     },
   },

@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { PIECE_TYPES } from "./pieceTypes";
 import { authGuard } from "./users";
 
 export const getFormation = query({
@@ -72,21 +73,15 @@ export const updateFormation = mutation({
 
     const nonNullPieces = pieces.filter((p) => p !== null);
 
-    const kingCount = nonNullPieces.filter((p) => p.pieceType === "king").length;
-    if (kingCount !== 1) {
-      throw new ConvexError("Invalid formation: must have exactly 1 King");
-    }
-
-    const queenCount = nonNullPieces.filter((p) => p.pieceType === "queen").length;
-    if (queenCount !== 1) {
-      throw new ConvexError("Invalid formation: must have exactly 1 Queen");
-    }
-
-    const minorPieceTypes = ["rook", "knight", "bishop"] as const;
-    for (const type of minorPieceTypes) {
+    for (const { type, min, max } of PIECE_TYPES) {
       const count = nonNullPieces.filter((p) => p.pieceType === type).length;
-      if (count > 3) {
-        throw new ConvexError(`Invalid formation: max 3 ${type}s allowed`);
+
+      if (count < min) {
+        throw new ConvexError(`Invalid formation: must have exactly ${min} ${type}`);
+      }
+
+      if (count > max) {
+        throw new ConvexError(`Invalid formation: max ${max} ${type}s allowed`);
       }
     }
 

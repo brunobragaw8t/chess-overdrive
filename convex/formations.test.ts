@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
+import { PIECE_TYPES } from "./pieceTypes";
 
 /**
  * Helper: inserts a user, their 5 starter pieces, and a default formation
@@ -20,18 +21,24 @@ async function seedDefaultFormation(t: ReturnType<typeof convexTest>) {
     });
 
     const now = Date.now();
-    const rookId = await ctx.db.insert("pieces", { userId, pieceType: "rook", createdAt: now });
-    const knightId = await ctx.db.insert("pieces", { userId, pieceType: "knight", createdAt: now });
-    const bishopId = await ctx.db.insert("pieces", { userId, pieceType: "bishop", createdAt: now });
-    const queenId = await ctx.db.insert("pieces", { userId, pieceType: "queen", createdAt: now });
-    const kingId = await ctx.db.insert("pieces", { userId, pieceType: "king", createdAt: now });
+    const pieceIds = [];
+
+    for (const { type } of PIECE_TYPES) {
+      const id = await ctx.db.insert("pieces", {
+        userId,
+        pieceType: type,
+        createdAt: now,
+      });
+
+      pieceIds.push(id);
+    }
 
     await ctx.db.insert("formations", {
       userId,
-      positions: [rookId, knightId, bishopId, queenId, kingId, null, null, null],
+      positions: [...pieceIds, null, null, null],
     });
 
-    return { userId, pieceIds: [rookId, knightId, bishopId, queenId, kingId] };
+    return { userId, pieceIds };
   });
 }
 
@@ -58,11 +65,11 @@ describe("getFormation", () => {
 
     expect(formation).not.toBeNull();
     expect(formation!.positions).toEqual([
-      { _id: pieceIds[0], pieceType: "rook" },
-      { _id: pieceIds[1], pieceType: "knight" },
-      { _id: pieceIds[2], pieceType: "bishop" },
-      { _id: pieceIds[3], pieceType: "queen" },
-      { _id: pieceIds[4], pieceType: "king" },
+      { _id: pieceIds[0], pieceType: PIECE_TYPES[0].type },
+      { _id: pieceIds[1], pieceType: PIECE_TYPES[1].type },
+      { _id: pieceIds[2], pieceType: PIECE_TYPES[2].type },
+      { _id: pieceIds[3], pieceType: PIECE_TYPES[3].type },
+      { _id: pieceIds[4], pieceType: PIECE_TYPES[4].type },
       null,
       null,
       null,
@@ -202,10 +209,19 @@ describe("updateFormation", () => {
     // Insert 3 extra rooks (giving the player 4 rooks total)
     const extraRookIds = await t.run(async (ctx) => {
       const now = Date.now();
-      const r1 = await ctx.db.insert("pieces", { userId, pieceType: "rook", createdAt: now });
-      const r2 = await ctx.db.insert("pieces", { userId, pieceType: "rook", createdAt: now });
-      const r3 = await ctx.db.insert("pieces", { userId, pieceType: "rook", createdAt: now });
-      return [r1, r2, r3];
+
+      const ids = [];
+      for (let i = 0; i < 3; i++) {
+        const id = await ctx.db.insert("pieces", {
+          userId,
+          pieceType: "rook",
+          createdAt: now,
+        });
+
+        ids.push(id);
+      }
+
+      return ids;
     });
 
     const asAlice = t.withIdentity({
@@ -213,17 +229,7 @@ describe("updateFormation", () => {
       subject: `${userId}|session123`,
     });
 
-    // pieceIds[0] is the original rook — 4 rooks total in positions
-    const positionsWith4Rooks: (Id<"pieces"> | null)[] = [
-      pieceIds[0],
-      pieceIds[3], // queen
-      pieceIds[4], // king
-      extraRookIds[0],
-      extraRookIds[1],
-      extraRookIds[2],
-      null,
-      null,
-    ];
+    const positionsWith4Rooks: (Id<"pieces"> | null)[] = [...pieceIds, ...extraRookIds];
 
     await expect(
       asAlice.mutation(api.formations.updateFormation, { positions: positionsWith4Rooks }),
@@ -243,7 +249,7 @@ describe("updateFormation", () => {
 
       const otherPieceId = await ctx.db.insert("pieces", {
         userId: otherUserId,
-        pieceType: "rook",
+        pieceType: PIECE_TYPES[0].type,
         createdAt: Date.now(),
       });
 
@@ -256,12 +262,8 @@ describe("updateFormation", () => {
     });
 
     const positionsWithStolenPiece: (Id<"pieces"> | null)[] = [
-      pieceIds[3], // queen
-      pieceIds[4], // king
+      ...pieceIds,
       otherPieceId,
-      null,
-      null,
-      null,
       null,
       null,
     ];
@@ -283,13 +285,12 @@ describe("updateFormation", () => {
       subject: `${userId}|session123`,
     });
 
-    // Rearrange: swap king (index 4) and rook (index 0), leave rest unchanged
     const rearranged: (Id<"pieces"> | null)[] = [
-      pieceIds[4], // king (was at index 4)
-      pieceIds[1], // knight
-      pieceIds[2], // bishop
-      pieceIds[3], // queen
-      pieceIds[0], // rook (was at index 0)
+      pieceIds[4],
+      pieceIds[1],
+      pieceIds[2],
+      pieceIds[3],
+      pieceIds[0],
       null,
       null,
       null,
@@ -301,11 +302,11 @@ describe("updateFormation", () => {
 
     expect(formation).not.toBeNull();
     expect(formation!.positions).toEqual([
-      { _id: pieceIds[4], pieceType: "king" },
-      { _id: pieceIds[1], pieceType: "knight" },
-      { _id: pieceIds[2], pieceType: "bishop" },
-      { _id: pieceIds[3], pieceType: "queen" },
-      { _id: pieceIds[0], pieceType: "rook" },
+      { _id: pieceIds[4], pieceType: PIECE_TYPES[4].type },
+      { _id: pieceIds[1], pieceType: PIECE_TYPES[1].type },
+      { _id: pieceIds[2], pieceType: PIECE_TYPES[2].type },
+      { _id: pieceIds[3], pieceType: PIECE_TYPES[3].type },
+      { _id: pieceIds[0], pieceType: PIECE_TYPES[0].type },
       null,
       null,
       null,

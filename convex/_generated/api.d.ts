@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as formations from "../formations.js";
 import type * as http from "../http.js";
+import type * as pieceTypes from "../pieceTypes.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,6 +24,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   formations: typeof formations;
   http: typeof http;
+  pieceTypes: typeof pieceTypes;
   users: typeof users;
 }>;
 

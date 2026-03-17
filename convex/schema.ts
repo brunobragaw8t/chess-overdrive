@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
+import { pieceTypeValidator } from "./pieceTypes";
 
 const schema = defineSchema({
   ...authTables,
@@ -21,13 +22,7 @@ const schema = defineSchema({
 
   pieces: defineTable({
     userId: v.id("users"),
-    pieceType: v.union(
-      v.literal("king"),
-      v.literal("queen"),
-      v.literal("rook"),
-      v.literal("knight"),
-      v.literal("bishop"),
-    ),
+    pieceType: pieceTypeValidator,
     createdAt: v.number(),
   }).index("by_userId", ["userId"]),
 
