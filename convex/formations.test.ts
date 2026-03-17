@@ -80,18 +80,31 @@ describe("updateFormation", () => {
   it("rejects formation with unknown pieces", async () => {
     const t = convexTest(schema, modules);
 
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation(t);
 
     const asAlice = t.withIdentity({
       name: "Alice",
       subject: `${userId}|session123`,
     });
 
+    // Insert a real piece, then delete it so the ID is valid but not found
+    const ghostId = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("pieces", {
+        userId,
+        pieceType: "rook",
+        createdAt: Date.now(),
+      });
+
+      await ctx.db.delete(id);
+
+      return id;
+    });
+
     await expect(
       asAlice.mutation(api.formations.updateFormation, {
-        positions: ["random-id" as Id<"pieces">],
+        positions: [ghostId, null, null, null, null, null, null, null],
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow("Invalid formation: piece not found");
   });
 
   it("rejects formation without a king", async () => {
