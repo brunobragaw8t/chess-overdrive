@@ -18,6 +18,23 @@ const schema = defineSchema({
     totalWins: v.optional(v.number()),
     createdAt: v.optional(v.number()),
   }).index("email", ["email"]),
+
+  pieces: defineTable({
+    userId: v.id("users"),
+    pieceType: v.union(
+      v.literal("king"),
+      v.literal("queen"),
+      v.literal("rook"),
+      v.literal("knight"),
+      v.literal("bishop"),
+    ),
+    createdAt: v.number(),
+  }).index("by_userId", ["userId"]),
+
+  formations: defineTable({
+    userId: v.id("users"),
+    positions: v.array(v.union(v.id("pieces"), v.null())),
+  }).index("by_userId", ["userId"]),
 });
 
 export default schema;
