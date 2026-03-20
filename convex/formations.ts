@@ -1,7 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { PIECE_TYPES } from "./pieceTypes";
+import { PIECE_TYPES } from "../src/constants/pieces";
 import { authGuard } from "./users";
 
 export const getFormation = query({

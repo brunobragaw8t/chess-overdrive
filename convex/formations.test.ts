@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
-import { PIECE_TYPES } from "./pieceTypes";
+import { PIECE_TYPES } from "../src/constants/pieces";
 
 /**
  * Helper: inserts a user, their 5 starter pieces, and a default formation
