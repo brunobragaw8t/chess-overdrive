@@ -98,6 +98,83 @@ export const updateFormation = mutation({
   },
 });
 
+export const placePiece = mutation({
+  args: {
+    pieceId: v.id("pieces"),
+    slotIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await authGuard(ctx);
+
+    const piece = await ctx.db.get(args.pieceId);
+    if (piece === null || piece.userId !== user._id) {
+      throw new ConvexError("Piece not found or not owned by player");
+    }
+
+    const formation = await ctx.db
+      .query("formations")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+
+    if (formation === null) {
+      throw new ConvexError("Formation not found");
+    }
+
+    if (args.slotIndex < 0 || args.slotIndex >= 8) {
+      throw new ConvexError("Invalid slot index");
+    }
+
+    if (formation.positions[args.slotIndex] !== null) {
+      throw new ConvexError("Slot is already occupied");
+    }
+
+    const alreadyPlaced = formation.positions.some((id) => id !== null && id === args.pieceId);
+    if (alreadyPlaced) {
+      throw new ConvexError("Piece is already placed in the formation");
+    }
+
+    const newPositions = [...formation.positions];
+    newPositions[args.slotIndex] = args.pieceId;
+    await ctx.db.patch(formation._id, { positions: newPositions });
+  },
+});
+
+export const removePiece = mutation({
+  args: {
+    slotIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await authGuard(ctx);
+
+    const formation = await ctx.db
+      .query("formations")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+
+    if (formation === null) {
+      throw new ConvexError("Formation not found");
+    }
+
+    if (args.slotIndex < 0 || args.slotIndex >= 8) {
+      throw new ConvexError("Invalid slot index");
+    }
+
+    const pieceId = formation.positions[args.slotIndex];
+    if (pieceId === null) {
+      throw new ConvexError("Slot is already empty");
+    }
+
+    const piece = await ctx.db.get(pieceId);
+    if (piece !== null && (piece.pieceType === "king" || piece.pieceType === "queen")) {
+      throw new ConvexError("Cannot remove King or Queen from formation");
+    }
+
+    const newPositions = [...formation.positions];
+    newPositions[args.slotIndex] = null;
+    await ctx.db.patch(formation._id, { positions: newPositions });
+  },
+});
+
 export const getInventory = query({
   args: {},
   handler: async (ctx) => {

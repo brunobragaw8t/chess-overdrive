@@ -339,5 +339,188 @@ describe("getInventory", () => {
   });
 });
 
+describe("placePiece", () => {
+  it("rejects unauthenticated calls", async () => {
+    const t = convexTest(schema, modules);
+
+    await expect(
+      t.mutation(api.formations.placePiece, {
+        pieceId: "pieces:fake" as Id<"pieces">,
+        slotIndex: 5,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("places an inventory piece into an empty slot; reflected in getFormation and getInventory", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId } = await seedDefaultFormation(t);
+
+    const extraRookId = await t.run(async (ctx) => {
+      return await ctx.db.insert("pieces", {
+        userId,
+        pieceType: "rook",
+        createdAt: Date.now(),
+      });
+    });
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    const inventoryBefore = await asAlice.query(api.formations.getInventory);
+    expect(inventoryBefore).toEqual([{ _id: extraRookId, pieceType: "rook" }]);
+
+    await asAlice.mutation(api.formations.placePiece, {
+      pieceId: extraRookId,
+      slotIndex: 5,
+    });
+
+    const inventoryAfter = await asAlice.query(api.formations.getInventory);
+    expect(inventoryAfter).toEqual([]);
+
+    const formation = await asAlice.query(api.formations.getFormation);
+    expect(formation).not.toBeNull();
+    expect(formation!.positions[5]).toEqual({ _id: extraRookId, pieceType: "rook" });
+  });
+
+  it("rejects placement into an occupied slot", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId } = await seedDefaultFormation(t);
+
+    const extraRookId = await t.run(async (ctx) => {
+      return await ctx.db.insert("pieces", {
+        userId,
+        pieceType: "rook",
+        createdAt: Date.now(),
+      });
+    });
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(
+      asAlice.mutation(api.formations.placePiece, {
+        pieceId: extraRookId,
+        slotIndex: 0,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects placing a piece that is already in the formation", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId, pieceIds } = await seedDefaultFormation(t);
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(
+      asAlice.mutation(api.formations.placePiece, {
+        pieceId: pieceIds[0],
+        slotIndex: 5,
+      }),
+    ).rejects.toThrow("Piece is already placed in the formation");
+  });
+
+  it("rejects placing a piece the player doesn't own", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId } = await seedDefaultFormation(t);
+
+    const otherPieceId = await t.run(async (ctx) => {
+      const otherUserId = await ctx.db.insert("users", {
+        name: "Bob",
+        email: "bob@test.com",
+      });
+
+      return await ctx.db.insert("pieces", {
+        userId: otherUserId,
+        pieceType: "rook",
+        createdAt: Date.now(),
+      });
+    });
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(
+      asAlice.mutation(api.formations.placePiece, {
+        pieceId: otherPieceId,
+        slotIndex: 5,
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("removePiece", () => {
+  it("rejects unauthenticated calls", async () => {
+    const t = convexTest(schema, modules);
+
+    await expect(t.mutation(api.formations.removePiece, { slotIndex: 0 })).rejects.toThrow();
+  });
+
+  it("removes a minor piece from formation; reflected in getFormation and getInventory", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId, pieceIds } = await seedDefaultFormation(t);
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    const inventoryBefore = await asAlice.query(api.formations.getInventory);
+    expect(inventoryBefore).toEqual([]);
+
+    await asAlice.mutation(api.formations.removePiece, { slotIndex: 0 });
+
+    const formation = await asAlice.query(api.formations.getFormation);
+    expect(formation).not.toBeNull();
+    expect(formation!.positions[0]).toBeNull();
+
+    const inventoryAfter = await asAlice.query(api.formations.getInventory);
+    expect(inventoryAfter).toEqual([{ _id: pieceIds[0], pieceType: "rook" }]);
+  });
+
+  it("rejects removing from an already empty slot", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId } = await seedDefaultFormation(t);
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(asAlice.mutation(api.formations.removePiece, { slotIndex: 5 })).rejects.toThrow(
+      "Slot is already empty",
+    );
+  });
+
+  it("rejects removing King or Queen", async () => {
+    const t = convexTest(schema, modules);
+
+    const { userId } = await seedDefaultFormation(t);
+
+    const asAlice = t.withIdentity({
+      name: "Alice",
+      subject: `${userId}|session123`,
+    });
+
+    await expect(asAlice.mutation(api.formations.removePiece, { slotIndex: 3 })).rejects.toThrow();
+
+    await expect(asAlice.mutation(api.formations.removePiece, { slotIndex: 4 })).rejects.toThrow();
+  });
+});
+
 // @ts-ignore
 const modules = import.meta.glob("./**/*.ts");
