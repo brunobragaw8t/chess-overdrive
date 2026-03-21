@@ -1,5 +1,7 @@
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useState } from "react";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { AppHeader } from "../components/app-header";
 import { FormationGrid } from "../components/formation/formation-grid";
 import { InventoryPanel } from "../components/formation/inventory-panel";
@@ -7,12 +9,74 @@ import { Card, CardContent } from "../components/ui/card";
 import { LoadingSpinner } from "../components/ui/loading-spinner";
 import { MonoLabel } from "../components/ui/mono-label";
 
+function extractErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 export function PageFormation() {
   const formation = useQuery(api.formations.getFormation);
+
+  const placePiece = useMutation(api.formations.placePiece);
+  const removePiece = useMutation(api.formations.removePiece);
+
+  const updateFormation = useMutation(api.formations.updateFormation);
+
   const inventory = useQuery(api.formations.getInventory);
+
+  const [selectedPieceId, setSelectedPieceId] = useState<Id<"pieces"> | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (formation === undefined || inventory === undefined) {
     return <LoadingSpinner label="LOADING_FORMATION" />;
+  }
+
+  async function handlePlacePiece(slotIndex: number) {
+    if (formation === undefined || formation === null || selectedPieceId === null) return;
+
+    const position = formation.positions[slotIndex];
+
+    if (position !== null) return;
+
+    setError(null);
+    setSelectedPieceId(null);
+
+    try {
+      await placePiece({ pieceId: selectedPieceId, slotIndex });
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    }
+  }
+
+  async function handleRemovePiece(slotIndex: number) {
+    setError(null);
+
+    try {
+      await removePiece({ slotIndex });
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    }
+  }
+
+  async function handleDropPiece(sourceIndex: number, targetIndex: number) {
+    if (formation === undefined || formation === null) return;
+
+    const newPositions = formation.positions.map((p) => p?._id ?? null);
+    const temp = newPositions[sourceIndex];
+    newPositions[sourceIndex] = newPositions[targetIndex];
+    newPositions[targetIndex] = temp;
+
+    setError(null);
+
+    try {
+      await updateFormation({ positions: newPositions });
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    }
+  }
+
+  function handleSelectPiece(pieceId: Id<"pieces"> | null) {
+    setSelectedPieceId(pieceId);
   }
 
   return (
@@ -26,13 +90,31 @@ export function PageFormation() {
 
         <Card className="animate-stamp mt-6">
           <CardContent className="flex flex-col gap-8">
-            {formation !== null ? (
-              <FormationGrid positions={formation.positions} />
-            ) : (
-              <MonoLabel tone="dim">NO FORMATION FOUND</MonoLabel>
+            {error !== null && (
+              <div className="border-danger/40 bg-danger/10 border-2 px-4 py-3">
+                <MonoLabel size="xs" tone="dim">
+                  {error}
+                </MonoLabel>
+              </div>
             )}
 
-            <InventoryPanel pieces={inventory ?? []} />
+            {formation === null ? (
+              <MonoLabel tone="dim">NO FORMATION FOUND</MonoLabel>
+            ) : (
+              <FormationGrid
+                positions={formation.positions}
+                onClickSlot={handlePlacePiece}
+                onRemove={handleRemovePiece}
+                onDrop={handleDropPiece}
+                hasSelectedPiece={selectedPieceId !== null}
+              />
+            )}
+
+            <InventoryPanel
+              pieces={inventory ?? []}
+              onSelectPiece={handleSelectPiece}
+              selectedPieceId={selectedPieceId}
+            />
           </CardContent>
         </Card>
       </main>
