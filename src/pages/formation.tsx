@@ -15,17 +15,21 @@ function extractErrorMessage(err: unknown): string {
 }
 
 export function PageFormation() {
+  /**
+   * General
+   */
+
   const formation = useQuery(api.formations.getFormation);
-
-  const placePiece = useMutation(api.formations.placePiece);
-  const removePiece = useMutation(api.formations.removePiece);
-
-  const updateFormation = useMutation(api.formations.updateFormation);
-
   const inventory = useQuery(api.formations.getInventory);
 
   const [selectedPieceId, setSelectedPieceId] = useState<Id<"pieces"> | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Place piece
+   */
+
+  const placePiece = useMutation(api.formations.placePiece);
 
   async function handlePlacePiece(slotIndex: number) {
     if (formation === undefined || formation === null || selectedPieceId === null) return;
@@ -44,6 +48,12 @@ export function PageFormation() {
     }
   }
 
+  /**
+   * Remove piece
+   */
+
+  const removePiece = useMutation(api.formations.removePiece);
+
   async function handleRemovePiece(slotIndex: number) {
     setError(null);
 
@@ -53,6 +63,16 @@ export function PageFormation() {
       setError(extractErrorMessage(err));
     }
   }
+
+  /**
+   * Drag and drop
+   */
+
+  function handleSelectPiece(pieceId: Id<"pieces"> | null) {
+    setSelectedPieceId(pieceId);
+  }
+
+  const updateFormation = useMutation(api.formations.updateFormation);
 
   async function handleDropPiece(sourceIndex: number, targetIndex: number) {
     if (formation === undefined || formation === null) return;
@@ -69,10 +89,6 @@ export function PageFormation() {
     } catch (err) {
       setError(extractErrorMessage(err));
     }
-  }
-
-  function handleSelectPiece(pieceId: Id<"pieces"> | null) {
-    setSelectedPieceId(pieceId);
   }
 
   return (
