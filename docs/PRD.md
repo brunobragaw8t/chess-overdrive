@@ -81,7 +81,7 @@ Matchmaking pairs players based on total win count, with both a queue system (fo
 41. As a player, I want to see which cards are active on pieces (mine and opponent's), so that I can factor abilities into my strategy.
 42. As a player, I want the game to end immediately when a king is captured, so that the result is clear.
 43. As a player, I want to be able to move my king into squares attacked by the opponent (no check concept), so that the king-capture rules are consistent.
-44. As a player, I want to promote a pawn that reaches the 8th rank to a piece type present in my opponent's formation, so that promotion is strategic and context-dependent.
+44. As a player, I want to promote a pawn that reaches the 8th rank to a piece type present in my opponent's starting formation, so that promotion is strategic and context-dependent.
 45. As a player, I want to resign from a match, so that I can concede without waiting.
 46. As a player, I want to see whose turn it is, so that I know when to act.
 47. As a player, I want the game to detect when my opponent disconnects and auto-forfeit them after 60 seconds, so that I'm not stuck waiting indefinitely.
@@ -144,7 +144,7 @@ Matchmaking pairs players based on total win count, with both a queue system (fo
 - King-capture variant: no check, no checkmate, no stalemate
 - A player can move their king into attacked squares (legal move)
 - Game ends when a king is captured
-- Pawn promotion: when a pawn reaches the 8th rank, the player chooses a piece type from the opponent's current formation (excluding king)
+- Pawn promotion: when a pawn reaches the 8th rank, the player chooses a piece type from the opponent's starting formation (excluding king)
 - Players can resign at any time (counts as a loss)
 - Disconnect: 60-second grace period, then auto-forfeit
 
@@ -255,4 +255,4 @@ The following are explicitly excluded from this PRD:
 - **Scalability of the card system**: The 6 initial cards are designed to be easily extensible. The card definition structure (target piece, effect, incompatibilities) is a data-driven model that supports adding new cards without engine changes — new cards only need a new effect handler.
 - **Soft delete implications**: Soft-deleted accounts should be excluded from matchmaking, lobbies, and leaderboards (if added later). Their game history remains for opponents' records. Display name should show as "[Deleted Player]" to other users.
 - **Piece inventory vs formation**: A player's inventory can hold more pieces than fit on the board (up to 9 pieces: 3R + 3N + 3B, but only 6 slots available after K + Q). The formation builder must make this clear.
-- **Promotion UX**: When a pawn reaches the 8th rank, the player must be shown the opponent's formation piece types (excluding king) and choose one. If the opponent only has a queen on their back row (e.g., early game with few pieces), promotion options are limited accordingly.
+- **Promotion UX**: When a pawn reaches the 8th rank, the player must be shown the opponent's starting formation piece types (excluding king) and choose one.
