@@ -38,6 +38,7 @@ export function AppHeader() {
 
         <nav className="flex items-center gap-6">
           <NavLink to="/home">DASHBOARD</NavLink>
+          <NavLink to="/formation">FORMATION</NavLink>
         </nav>
       </div>
 

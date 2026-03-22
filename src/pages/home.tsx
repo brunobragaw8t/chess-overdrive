@@ -1,12 +1,13 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { AppHeader } from "../components/app-header";
+import { FormationSummaryCard } from "../components/formation/formation-summary-card";
 import { Card, CardContent, CardDivider } from "../components/ui/card";
 import { LoadingSpinner } from "../components/ui/loading-spinner";
 import { MonoLabel } from "../components/ui/mono-label";
 import { UserAvatar } from "../components/ui/user-avatar";
 
-const placeholderCards = ["FORMATIONS", "MATCHMAKING", "UPGRADES", "MATCH HISTORY"] as const;
+const placeholderCards = ["MATCHMAKING", "UPGRADES", "MATCH HISTORY"] as const;
 
 export function PageHome() {
   const user = useQuery(api.users.getCurrentUser);
@@ -48,11 +49,13 @@ export function PageHome() {
         </Card>
 
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormationSummaryCard />
+
           {placeholderCards.map((label, i) => (
             <div
               key={label}
               className="animate-stamp border-border hover:border-accent/30 flex min-h-30 flex-col items-center justify-center border-2 border-dashed p-6 transition-colors duration-200"
-              style={{ animationDelay: `${100 + i * 50}ms` }}
+              style={{ animationDelay: `${150 + i * 50}ms` }}
             >
               <MonoLabel tracking="wider">{label}</MonoLabel>
 
