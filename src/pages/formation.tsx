@@ -27,10 +27,6 @@ export function PageFormation() {
   const [selectedPieceId, setSelectedPieceId] = useState<Id<"pieces"> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (formation === undefined || inventory === undefined) {
-    return <LoadingSpinner label="LOADING_FORMATION" />;
-  }
-
   async function handlePlacePiece(slotIndex: number) {
     if (formation === undefined || formation === null || selectedPieceId === null) return;
 
@@ -88,35 +84,39 @@ export function PageFormation() {
           // FORMATION
         </MonoLabel>
 
-        <Card className="animate-stamp mt-6">
-          <CardContent className="flex flex-col gap-8">
-            {error !== null && (
-              <div className="border-danger/40 bg-danger/10 border-2 px-4 py-3">
-                <MonoLabel size="xs" tone="dim">
-                  {error}
-                </MonoLabel>
-              </div>
-            )}
+        {formation === undefined || inventory === undefined ? (
+          <LoadingSpinner label="LOADING_FORMATION" className="min-h-80" />
+        ) : (
+          <Card className="animate-stamp mt-6">
+            <CardContent className="flex flex-col gap-8">
+              {error !== null && (
+                <div className="border-danger/40 bg-danger/10 border-2 px-4 py-3">
+                  <MonoLabel size="xs" tone="dim">
+                    {error}
+                  </MonoLabel>
+                </div>
+              )}
 
-            {formation === null ? (
-              <MonoLabel tone="dim">NO FORMATION FOUND</MonoLabel>
-            ) : (
-              <FormationGrid
-                positions={formation.positions}
-                onClickSlot={handlePlacePiece}
-                onRemove={handleRemovePiece}
-                onDrop={handleDropPiece}
-                hasSelectedPiece={selectedPieceId !== null}
+              {formation === null ? (
+                <MonoLabel tone="dim">NO FORMATION FOUND</MonoLabel>
+              ) : (
+                <FormationGrid
+                  positions={formation.positions}
+                  onClickSlot={handlePlacePiece}
+                  onRemove={handleRemovePiece}
+                  onDrop={handleDropPiece}
+                  hasSelectedPiece={selectedPieceId !== null}
+                />
+              )}
+
+              <InventoryPanel
+                pieces={inventory ?? []}
+                onSelectPiece={handleSelectPiece}
+                selectedPieceId={selectedPieceId}
               />
-            )}
-
-            <InventoryPanel
-              pieces={inventory ?? []}
-              onSelectPiece={handleSelectPiece}
-              selectedPieceId={selectedPieceId}
-            />
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </>
   );
