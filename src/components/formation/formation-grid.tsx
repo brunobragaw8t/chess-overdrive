@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { TARGET_PULSE, TARGET_RING_CLASSES } from "../../lib/indicator-styles";
 import { cn } from "../../lib/utils";
 import { getPieceIcon, isPieceRoyal } from "../../lib/pieces";
 import type { FormationSlot, PieceSummary } from "../../types/convex";
@@ -96,7 +97,7 @@ export function FormationGrid({
         (e) => {
           e.preventDefault();
           if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-          el.classList.add("border-accent", "ring-2", "ring-accent/40");
+          el.classList.add(...TARGET_RING_CLASSES);
         },
         { signal: abortController.signal },
       );
@@ -104,7 +105,7 @@ export function FormationGrid({
       el.addEventListener(
         "dragleave",
         () => {
-          el.classList.remove("border-accent", "ring-2", "ring-accent/40");
+          el.classList.remove(...TARGET_RING_CLASSES);
         },
         { signal: abortController.signal },
       );
@@ -113,7 +114,7 @@ export function FormationGrid({
         "drop",
         (e) => {
           e.preventDefault();
-          el.classList.remove("border-accent", "ring-2", "ring-accent/40");
+          el.classList.remove(...TARGET_RING_CLASSES);
 
           const sourceIndex = Number(e.dataTransfer?.getData("text/plain"));
           if (!Number.isNaN(sourceIndex) && sourceIndex !== i && onDropRef.current) {
@@ -157,7 +158,7 @@ export function FormationGrid({
               className={cn(
                 "group/slot relative flex min-h-24 flex-col items-center justify-center border-2 p-2 transition-all duration-150",
                 isOccupied ? "border-border-hard bg-bg cursor-grab" : "border-border border-dashed",
-                isEmptyTarget && "border-accent animate-pulse cursor-pointer",
+                isEmptyTarget && TARGET_PULSE,
               )}
               onClick={() => onClickSlot?.(i)}
               onDragStart={(e) => handleDragStart(e, i)}

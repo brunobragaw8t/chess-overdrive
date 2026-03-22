@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { TARGET_RING_CLASSES } from "../../lib/indicator-styles";
 import type { PieceSummary } from "../../types/convex";
 import { InventoryPanel } from "./inventory-panel";
 
@@ -79,8 +80,10 @@ describe("InventoryPanel — selected state", () => {
     const rookGroup = within(panel).getByTestId("inventory-group-rook");
     const knightGroup = within(panel).getByTestId("inventory-group-knight");
 
-    expect(rookGroup.className).toMatch(/ring|border-accent|selected/);
-    expect(knightGroup.className).not.toMatch(/ring|border-accent|selected/);
+    for (const cls of TARGET_RING_CLASSES) {
+      expect(rookGroup.classList.contains(cls)).toBe(true);
+      expect(knightGroup.classList.contains(cls)).toBe(false);
+    }
   });
 
   it("deselects when the same piece type is clicked again", async () => {

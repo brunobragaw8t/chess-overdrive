@@ -1,5 +1,6 @@
 import type { Id } from "../../../convex/_generated/dataModel";
 import { getPieceIcon } from "../../lib/pieces";
+import { TARGET_RING } from "../../lib/indicator-styles";
 import { cn } from "../../lib/utils";
 import type { PieceSummary } from "../../types/convex";
 import { MonoLabel } from "../ui/mono-label";
@@ -46,7 +47,7 @@ export function InventoryPanel({ pieces, onSelectPiece, selectedPieceId }: Inven
                 data-testid={`inventory-group-${type}`}
                 className={cn(
                   "border-border-hard bg-bg flex cursor-pointer items-center gap-3 border-2 px-4 py-3 transition-all duration-150",
-                  isSelected && "border-accent ring-accent/40 ring-2",
+                  isSelected && TARGET_RING,
                 )}
                 onClick={() => {
                   if (!onSelectPiece) return;

@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { TARGET_PULSE_CLASSES, TARGET_RING_CLASSES } from "../../lib/indicator-styles";
 import type { FormationSlot } from "../../types/convex";
 import { FormationGrid } from "./formation-grid";
 
@@ -205,7 +206,9 @@ describe("FormationGrid — drag and drop", () => {
 
     targetSlot.dispatchEvent(new DragEvent("dragover", { bubbles: true, dataTransfer }));
 
-    expect(targetSlot.className).toMatch(/drag-over|ring|outline|border-accent/);
+    for (const cls of TARGET_RING_CLASSES) {
+      expect(targetSlot.classList.contains(cls)).toBe(true);
+    }
   });
 });
 
@@ -218,13 +221,15 @@ describe("FormationGrid — selected piece highlighting", () => {
     render(<FormationGrid positions={POSITIONS} onClickSlot={vi.fn()} hasSelectedPiece={true} />);
 
     const emptySlot = screen.getByTestId("formation-slot-5");
-    expect(emptySlot.className).toMatch(/ring|outline|border-accent|pulse/);
+    for (const cls of TARGET_PULSE_CLASSES) {
+      expect(emptySlot.classList.contains(cls)).toBe(true);
+    }
   });
 
   it("does not highlight occupied slots as targets when a piece is selected", () => {
     render(<FormationGrid positions={POSITIONS} onClickSlot={vi.fn()} hasSelectedPiece={true} />);
 
     const occupiedSlot = screen.getByTestId("formation-slot-0");
-    expect(occupiedSlot.className).not.toMatch(/pulse/);
+    expect(occupiedSlot.classList.contains("animate-pulse")).toBe(false);
   });
 });
