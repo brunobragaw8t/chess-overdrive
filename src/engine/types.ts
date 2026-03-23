@@ -24,3 +24,16 @@ export type Move = {
 };
 
 export type Formation = (PieceType | null)[];
+
+export type GameStatus = "active" | "finished";
+
+export type GameResult = "white_wins" | "black_wins";
+
+export type GameState = {
+  board: Board;
+  currentTurn: Color;
+  status: GameStatus;
+  result: GameResult | null;
+  whiteFormation: Formation;
+  blackFormation: Formation;
+};
