@@ -4,49 +4,13 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
 import { PIECE_TYPES } from "../src/constants/pieces";
+import { seedPlayer } from "./test-helpers";
 
 let t: ReturnType<typeof convexTest>;
 
 beforeEach(() => {
   t = convexTest(schema, modules);
 });
-
-/**
- * Helper: inserts a user, their 5 starter pieces, and a default formation
- * referencing those piece IDs. Mirrors what `afterUserCreatedOrUpdated`
- * should do for new users.
- *
- * Returns { userId, pieceIds } where pieceIds is ordered:
- * [rook, knight, bishop, queen, king]
- */
-async function seedDefaultFormation() {
-  return await t.run(async (ctx) => {
-    const userId = await ctx.db.insert("users", {
-      name: "Alice",
-      email: "alice@test.com",
-    });
-
-    const now = Date.now();
-    const pieceIds = [];
-
-    for (const { type } of PIECE_TYPES) {
-      const id = await ctx.db.insert("pieces", {
-        userId,
-        pieceType: type,
-        createdAt: now,
-      });
-
-      pieceIds.push(id);
-    }
-
-    await ctx.db.insert("formations", {
-      userId,
-      positions: [...pieceIds, null, null, null],
-    });
-
-    return { userId, pieceIds };
-  });
-}
 
 describe("getFormation", () => {
   it("returns null when unauthenticated", async () => {
@@ -56,7 +20,7 @@ describe("getFormation", () => {
   });
 
   it("returns the default formation after seeding (5 pieces placed, 3 empty slots)", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -85,7 +49,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation with unknown pieces", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -113,7 +77,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation without a king", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -137,7 +101,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation without a queen", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -161,7 +125,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects positions array with wrong length", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -194,13 +158,13 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation with more than 3 of a minor piece type", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     // Insert 3 extra rooks (giving the player 4 rooks total)
     const extraRookIds = await t.run(async (ctx) => {
       const now = Date.now();
 
-      const ids = [];
+      const ids: Id<"pieces">[] = [];
       for (let i = 0; i < 3; i++) {
         const id = await ctx.db.insert("pieces", {
           userId,
@@ -227,7 +191,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation with pieces the player doesn't own", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const otherPieceId = await t.run(async (ctx) => {
       const otherUserId = await ctx.db.insert("users", {
@@ -264,7 +228,7 @@ describe("updateFormation", () => {
   });
 
   it("accepts valid rearrangement and getFormation reflects the change", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -308,7 +272,7 @@ describe("getInventory", () => {
   });
 
   it("returns empty array for a new player (all starter pieces are placed)", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -332,7 +296,7 @@ describe("placePiece", () => {
   });
 
   it("places an inventory piece into an empty slot; reflected in getFormation and getInventory", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const extraRookId = await t.run(async (ctx) => {
       return await ctx.db.insert("pieces", {
@@ -364,7 +328,7 @@ describe("placePiece", () => {
   });
 
   it("rejects placement into an occupied slot", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const extraRookId = await t.run(async (ctx) => {
       return await ctx.db.insert("pieces", {
@@ -388,7 +352,7 @@ describe("placePiece", () => {
   });
 
   it("rejects placing a piece that is already in the formation", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -404,7 +368,7 @@ describe("placePiece", () => {
   });
 
   it("rejects placing a piece the player doesn't own", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const otherPieceId = await t.run(async (ctx) => {
       const otherUserId = await ctx.db.insert("users", {
@@ -439,7 +403,7 @@ describe("removePiece", () => {
   });
 
   it("removes a minor piece from formation; reflected in getFormation and getInventory", async () => {
-    const { userId, pieceIds } = await seedDefaultFormation();
+    const { userId, pieceIds } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -460,7 +424,7 @@ describe("removePiece", () => {
   });
 
   it("rejects removing from an already empty slot", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -473,7 +437,7 @@ describe("removePiece", () => {
   });
 
   it("rejects removing King or Queen", async () => {
-    const { userId } = await seedDefaultFormation();
+    const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
       name: "Alice",
