@@ -1,21 +1,23 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
+let t: ReturnType<typeof convexTest>;
+
+beforeEach(() => {
+  t = convexTest(schema, modules);
+});
+
 describe("getCurrentUser", () => {
   it("returns null when unauthenticated", async () => {
-    const t = convexTest(schema, modules);
-
     const user = await t.query(api.users.getCurrentUser);
 
     expect(user).toBeNull();
   });
 
   it("returns user data when authenticated", async () => {
-    const t = convexTest(schema, modules);
-
     const userData = {
       name: "Alice",
       email: "alice@test.com",
@@ -38,14 +40,10 @@ describe("getCurrentUser", () => {
 
 describe("updateProfile", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(t.mutation(api.users.updateProfile, { name: "NewName" })).rejects.toThrow();
   });
 
   it("rejects empty or whitespace-only names", async () => {
-    const t = convexTest(schema, modules);
-
     const userId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", { name: "Alice", email: "alice@testers.com" });
     });
@@ -65,8 +63,6 @@ describe("updateProfile", () => {
   });
 
   it("updates name and the change is retrievable via getCurrentUser", async () => {
-    const t = convexTest(schema, modules);
-
     const userId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", { name: "Alice", email: "alice@testers.com" });
     });
@@ -86,23 +82,17 @@ describe("updateProfile", () => {
 
 describe("generateAvatarUploadUrl", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(t.mutation(api.users.generateAvatarUploadUrl)).rejects.toThrow();
   });
 });
 
 describe("saveAvatar", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     const storageId = "kg2b0p1cxs0cmf1t4fgrdg1m0h72gn3w" as Id<"_storage">;
     await expect(t.mutation(api.users.saveAvatar, { storageId })).rejects.toThrow();
   });
 
   it("stores avatar ID and getCurrentUser returns user with avatarUrl", async () => {
-    const t = convexTest(schema, modules);
-
     const storageId = await t.run(async (ctx) => {
       return await ctx.storage.store(new Blob(["fake-image"], { type: "image/png" }));
     });
@@ -127,14 +117,10 @@ describe("saveAvatar", () => {
 
 describe("deleteAccount", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(t.mutation(api.users.deleteAccount)).rejects.toThrow();
   });
 
   it("deletes the user document and all auth records from the database", async () => {
-    const t = convexTest(schema, modules);
-
     const userId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", { name: "Alice", email: "alice@testers.com" });
     });
@@ -187,8 +173,6 @@ describe("deleteAccount", () => {
   });
 
   it("makes getCurrentUser return null for deleted user", async () => {
-    const t = convexTest(schema, modules);
-
     const userId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", { name: "Alice", email: "alice@testers.com" });
     });

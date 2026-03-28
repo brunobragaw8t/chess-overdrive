@@ -1,19 +1,21 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { seedPlayer } from "./test-helpers";
 
+let t: ReturnType<typeof convexTest>;
+
+beforeEach(() => {
+  t = convexTest(schema, modules);
+});
+
 describe("createLobby", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(t.mutation(api.lobbies.createLobby)).rejects.toThrow();
   });
 
   it("creates lobby in 'waiting' status and returns its ID", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
@@ -39,8 +41,6 @@ describe("createLobby", () => {
 
 describe("getLobby", () => {
   it("returns null for unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
@@ -56,8 +56,6 @@ describe("getLobby", () => {
   });
 
   it("returns lobby state for authenticated host in waiting status", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
@@ -78,8 +76,6 @@ describe("getLobby", () => {
   });
 
   it("returns lobby with gameId and guest name after guest joins", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId: aliceId } = await seedPlayer(t, "Alice", "alice@test.com");
     const { userId: bobId } = await seedPlayer(t, "Bob", "bob@test.com");
 
@@ -112,8 +108,6 @@ describe("getLobby", () => {
 
 describe("joinLobby", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
@@ -127,8 +121,6 @@ describe("joinLobby", () => {
   });
 
   it("rejects joining a non-waiting lobby", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId: aliceId } = await seedPlayer(t, "Alice", "alice@test.com");
     const { userId: bobId } = await seedPlayer(t, "Bob", "bob@test.com");
 
@@ -155,8 +147,6 @@ describe("joinLobby", () => {
   });
 
   it("rejects joining own lobby", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId } = await seedPlayer(t, "Alice", "alice@test.com");
 
     const asAlice = t.withIdentity({
@@ -172,8 +162,6 @@ describe("joinLobby", () => {
   });
 
   it("initializes game with formations from both players and sets lobby to active", async () => {
-    const t = convexTest(schema, modules);
-
     const { userId: aliceId } = await seedPlayer(t, "Alice", "alice@test.com");
     const { userId: bobId } = await seedPlayer(t, "Bob", "bob@test.com");
 

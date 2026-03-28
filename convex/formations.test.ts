@@ -1,9 +1,15 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
 import { PIECE_TYPES } from "../src/constants/pieces";
+
+let t: ReturnType<typeof convexTest>;
+
+beforeEach(() => {
+  t = convexTest(schema, modules);
+});
 
 /**
  * Helper: inserts a user, their 5 starter pieces, and a default formation
@@ -13,7 +19,7 @@ import { PIECE_TYPES } from "../src/constants/pieces";
  * Returns { userId, pieceIds } where pieceIds is ordered:
  * [rook, knight, bishop, queen, king]
  */
-async function seedDefaultFormation(t: ReturnType<typeof convexTest>) {
+async function seedDefaultFormation() {
   return await t.run(async (ctx) => {
     const userId = await ctx.db.insert("users", {
       name: "Alice",
@@ -44,17 +50,13 @@ async function seedDefaultFormation(t: ReturnType<typeof convexTest>) {
 
 describe("getFormation", () => {
   it("returns null when unauthenticated", async () => {
-    const t = convexTest(schema, modules);
-
     const formation = await t.query(api.formations.getFormation);
 
     expect(formation).toBeNull();
   });
 
   it("returns the default formation after seeding (5 pieces placed, 3 empty slots)", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -79,15 +81,11 @@ describe("getFormation", () => {
 
 describe("updateFormation", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(t.mutation(api.formations.updateFormation, { positions: [] })).rejects.toThrow();
   });
 
   it("rejects formation with unknown pieces", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -115,9 +113,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation without a king", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -141,9 +137,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation without a queen", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -167,9 +161,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects positions array with wrong length", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -202,9 +194,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation with more than 3 of a minor piece type", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     // Insert 3 extra rooks (giving the player 4 rooks total)
     const extraRookIds = await t.run(async (ctx) => {
@@ -237,9 +227,7 @@ describe("updateFormation", () => {
   });
 
   it("rejects formation with pieces the player doesn't own", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const otherPieceId = await t.run(async (ctx) => {
       const otherUserId = await ctx.db.insert("users", {
@@ -276,9 +264,7 @@ describe("updateFormation", () => {
   });
 
   it("accepts valid rearrangement and getFormation reflects the change", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -316,17 +302,13 @@ describe("updateFormation", () => {
 
 describe("getInventory", () => {
   it("returns null when unauthenticated", async () => {
-    const t = convexTest(schema, modules);
-
     const inventory = await t.query(api.formations.getInventory);
 
     expect(inventory).toBeNull();
   });
 
   it("returns empty array for a new player (all starter pieces are placed)", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -341,8 +323,6 @@ describe("getInventory", () => {
 
 describe("placePiece", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(
       t.mutation(api.formations.placePiece, {
         pieceId: "pieces:fake" as Id<"pieces">,
@@ -352,9 +332,7 @@ describe("placePiece", () => {
   });
 
   it("places an inventory piece into an empty slot; reflected in getFormation and getInventory", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const extraRookId = await t.run(async (ctx) => {
       return await ctx.db.insert("pieces", {
@@ -386,9 +364,7 @@ describe("placePiece", () => {
   });
 
   it("rejects placement into an occupied slot", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const extraRookId = await t.run(async (ctx) => {
       return await ctx.db.insert("pieces", {
@@ -412,9 +388,7 @@ describe("placePiece", () => {
   });
 
   it("rejects placing a piece that is already in the formation", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -430,9 +404,7 @@ describe("placePiece", () => {
   });
 
   it("rejects placing a piece the player doesn't own", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const otherPieceId = await t.run(async (ctx) => {
       const otherUserId = await ctx.db.insert("users", {
@@ -463,15 +435,11 @@ describe("placePiece", () => {
 
 describe("removePiece", () => {
   it("rejects unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
     await expect(t.mutation(api.formations.removePiece, { slotIndex: 0 })).rejects.toThrow();
   });
 
   it("removes a minor piece from formation; reflected in getFormation and getInventory", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId, pieceIds } = await seedDefaultFormation(t);
+    const { userId, pieceIds } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -492,9 +460,7 @@ describe("removePiece", () => {
   });
 
   it("rejects removing from an already empty slot", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",
@@ -507,9 +473,7 @@ describe("removePiece", () => {
   });
 
   it("rejects removing King or Queen", async () => {
-    const t = convexTest(schema, modules);
-
-    const { userId } = await seedDefaultFormation(t);
+    const { userId } = await seedDefaultFormation();
 
     const asAlice = t.withIdentity({
       name: "Alice",

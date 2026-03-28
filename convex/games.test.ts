@@ -1,13 +1,19 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { seedPlayer } from "./test-helpers";
 
+let t: ReturnType<typeof convexTest>;
+
+beforeEach(() => {
+  t = convexTest(schema, modules);
+});
+
 /**
  * Helper: creates a lobby (as Alice), joins it (as Bob), returns gameId + lobbyId.
  */
-async function seedGame(t: ReturnType<typeof convexTest>) {
+async function seedGame() {
   const { userId: aliceId } = await seedPlayer(t, "Alice", "alice@test.com");
   const { userId: bobId } = await seedPlayer(t, "Bob", "bob@test.com");
 
@@ -30,9 +36,7 @@ async function seedGame(t: ReturnType<typeof convexTest>) {
 
 describe("getGame", () => {
   it("returns null for unauthenticated calls", async () => {
-    const t = convexTest(schema, modules);
-
-    const { gameId } = await seedGame(t);
+    const { gameId } = await seedGame();
 
     const game = await t.query(api.games.getGame, { gameId });
 
@@ -40,9 +44,7 @@ describe("getGame", () => {
   });
 
   it("returns board state, players, turn, and status for authenticated player", async () => {
-    const t = convexTest(schema, modules);
-
-    const { gameId, asAlice } = await seedGame(t);
+    const { gameId, asAlice } = await seedGame();
 
     const game = await asAlice.query(api.games.getGame, { gameId });
 
