@@ -1,10 +1,4 @@
-export type PieceType =
-  | "pawn"
-  | "rook"
-  | "knight"
-  | "bishop"
-  | "queen"
-  | "king";
+export type PieceType = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
 
 export type Color = "white" | "black";
 
@@ -20,10 +14,10 @@ export type Position = [row: number, col: number];
 export type Move = {
   from: Position;
   to: Position;
-  promotion?: PieceType;
+  promotion?: Exclude<PieceType, "pawn">;
 };
 
-export type Formation = (PieceType | null)[];
+export type Formation = (Exclude<PieceType, "pawn"> | null)[];
 
 export type GameStatus = "active" | "finished";
 

@@ -52,14 +52,12 @@ describe("getGame", () => {
     expect(game!._id).toBe(gameId);
     expect(game!.currentTurn).toBe("white");
     expect(game!.status).toBe("active");
-    expect(game!.result).toBeUndefined();
+    expect(game!.result).toBeNull();
     expect(game!.whitePlayerName).toBe("Alice");
     expect(game!.blackPlayerName).toBe("Bob");
-
-    const state = JSON.parse(game!.boardState);
-    expect(state.board).toHaveLength(8);
-    expect(state.currentTurn).toBe("white");
-    expect(state.status).toBe("active");
+    expect(game!.board).toHaveLength(8);
+    expect(game!.currentTurn).toBe("white");
+    expect(game!.status).toBe("active");
   });
 });
 

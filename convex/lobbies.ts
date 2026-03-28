@@ -74,9 +74,7 @@ export const joinLobby = mutation({
     const gameId = await ctx.db.insert("games", {
       whitePlayerId: lobby.hostUserId,
       blackPlayerId: user._id,
-      boardState: JSON.stringify(gameState),
-      currentTurn: "white",
-      status: "active",
+      ...gameState,
       createdAt: Date.now(),
     });
 

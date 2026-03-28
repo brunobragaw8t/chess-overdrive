@@ -198,42 +198,41 @@ describe("joinLobby", () => {
     expect(game!.blackPlayerId).toBe(bobId);
     expect(game!.currentTurn).toBe("white");
     expect(game!.status).toBe("active");
-    expect(game!.result).toBeUndefined();
+    expect(game!.result).toBeNull();
 
-    // Verify board state is valid JSON with an 8x8 grid
-    const boardState = JSON.parse(game!.boardState);
-    expect(boardState.board).toHaveLength(8);
-    expect(boardState.board[0]).toHaveLength(8);
+    // Verify board is an 8x8 grid
+    expect(game!.board).toHaveLength(8);
+    expect(game!.board[0]).toHaveLength(8);
 
     // White's back row (row 0) should have pieces from Alice's formation
-    expect(boardState.board[0][0]).toEqual({ type: "rook", color: "white" });
-    expect(boardState.board[0][1]).toEqual({ type: "knight", color: "white" });
-    expect(boardState.board[0][2]).toEqual({ type: "bishop", color: "white" });
-    expect(boardState.board[0][3]).toEqual({ type: "queen", color: "white" });
-    expect(boardState.board[0][4]).toEqual({ type: "king", color: "white" });
-    expect(boardState.board[0][5]).toBeNull();
-    expect(boardState.board[0][6]).toBeNull();
-    expect(boardState.board[0][7]).toBeNull();
+    expect(game!.board[0][0]).toEqual({ type: "rook", color: "white" });
+    expect(game!.board[0][1]).toEqual({ type: "knight", color: "white" });
+    expect(game!.board[0][2]).toEqual({ type: "bishop", color: "white" });
+    expect(game!.board[0][3]).toEqual({ type: "queen", color: "white" });
+    expect(game!.board[0][4]).toEqual({ type: "king", color: "white" });
+    expect(game!.board[0][5]).toBeNull();
+    expect(game!.board[0][6]).toBeNull();
+    expect(game!.board[0][7]).toBeNull();
 
     // White pawns on row 1
     for (let col = 0; col < 8; col++) {
-      expect(boardState.board[1][col]).toEqual({ type: "pawn", color: "white" });
+      expect(game!.board[1][col]).toEqual({ type: "pawn", color: "white" });
     }
 
     // Black pawns on row 6
     for (let col = 0; col < 8; col++) {
-      expect(boardState.board[6][col]).toEqual({ type: "pawn", color: "black" });
+      expect(game!.board[6][col]).toEqual({ type: "pawn", color: "black" });
     }
 
     // Black's back row (row 7) should have mirrored formation
-    expect(boardState.board[7][7]).toEqual({ type: "rook", color: "black" });
-    expect(boardState.board[7][6]).toEqual({ type: "knight", color: "black" });
-    expect(boardState.board[7][5]).toEqual({ type: "bishop", color: "black" });
-    expect(boardState.board[7][4]).toEqual({ type: "queen", color: "black" });
-    expect(boardState.board[7][3]).toEqual({ type: "king", color: "black" });
-    expect(boardState.board[7][2]).toBeNull();
-    expect(boardState.board[7][1]).toBeNull();
-    expect(boardState.board[7][0]).toBeNull();
+    expect(game!.board[7][7]).toEqual({ type: "rook", color: "black" });
+    expect(game!.board[7][6]).toEqual({ type: "knight", color: "black" });
+    expect(game!.board[7][5]).toEqual({ type: "bishop", color: "black" });
+    expect(game!.board[7][4]).toEqual({ type: "queen", color: "black" });
+    expect(game!.board[7][3]).toEqual({ type: "king", color: "black" });
+    expect(game!.board[7][2]).toBeNull();
+    expect(game!.board[7][1]).toBeNull();
+    expect(game!.board[7][0]).toBeNull();
   });
 });
 

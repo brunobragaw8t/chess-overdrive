@@ -1,7 +1,14 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
-import { pieceTypeValidator } from "./pieceTypes";
+import {
+  boardValidator,
+  collectiblePieceTypeValidator,
+  colorValidator,
+  formationValidator,
+  gameResultValidator,
+  gameStatusValidator,
+} from "./validators";
 
 const schema = defineSchema({
   ...authTables,
@@ -23,7 +30,7 @@ const schema = defineSchema({
 
   pieces: defineTable({
     userId: v.id("users"),
-    pieceType: pieceTypeValidator,
+    pieceType: collectiblePieceTypeValidator,
     createdAt: v.number(),
   }).index("by_userId", ["userId"]),
 
@@ -42,10 +49,12 @@ const schema = defineSchema({
   games: defineTable({
     whitePlayerId: v.id("users"),
     blackPlayerId: v.id("users"),
-    boardState: v.string(),
-    currentTurn: v.union(v.literal("white"), v.literal("black")),
-    status: v.union(v.literal("active"), v.literal("finished")),
-    result: v.optional(v.union(v.literal("white_wins"), v.literal("black_wins"))),
+    board: boardValidator,
+    currentTurn: colorValidator,
+    status: gameStatusValidator,
+    result: v.union(gameResultValidator, v.null()),
+    whiteFormation: formationValidator,
+    blackFormation: formationValidator,
     whiteLastSeenAt: v.optional(v.number()),
     blackLastSeenAt: v.optional(v.number()),
     lastMoveFrom: v.optional(v.array(v.number())),
