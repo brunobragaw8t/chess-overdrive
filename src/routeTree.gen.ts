@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedFormationRouteImport } from './routes/_authenticated/formation'
+import { Route as AuthenticatedLobbyLobbyIdRouteImport } from './routes/_authenticated/lobby/$lobbyId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -29,6 +31,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPlayRoute = AuthenticatedPlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -39,18 +46,28 @@ const AuthenticatedFormationRoute = AuthenticatedFormationRouteImport.update({
   path: '/formation',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLobbyLobbyIdRoute =
+  AuthenticatedLobbyLobbyIdRouteImport.update({
+    id: '/lobby/$lobbyId',
+    path: '/lobby/$lobbyId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/formation': typeof AuthenticatedFormationRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/play': typeof AuthenticatedPlayRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/lobby/$lobbyId': typeof AuthenticatedLobbyLobbyIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/formation': typeof AuthenticatedFormationRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/play': typeof AuthenticatedPlayRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/lobby/$lobbyId': typeof AuthenticatedLobbyLobbyIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,20 +75,30 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/formation': typeof AuthenticatedFormationRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/play': typeof AuthenticatedPlayRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/lobby/$lobbyId': typeof AuthenticatedLobbyLobbyIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/formation' | '/home' | '/profile'
+  fullPaths:
+    | '/'
+    | '/formation'
+    | '/home'
+    | '/play'
+    | '/profile'
+    | '/lobby/$lobbyId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/formation' | '/home' | '/profile'
+  to: '/' | '/formation' | '/home' | '/play' | '/profile' | '/lobby/$lobbyId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/formation'
     | '/_authenticated/home'
+    | '/_authenticated/play'
     | '/_authenticated/profile'
+    | '/_authenticated/lobby/$lobbyId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -102,6 +129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/play': {
+      id: '/_authenticated/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof AuthenticatedPlayRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -116,19 +150,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFormationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/lobby/$lobbyId': {
+      id: '/_authenticated/lobby/$lobbyId'
+      path: '/lobby/$lobbyId'
+      fullPath: '/lobby/$lobbyId'
+      preLoaderRoute: typeof AuthenticatedLobbyLobbyIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedFormationRoute: typeof AuthenticatedFormationRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedLobbyLobbyIdRoute: typeof AuthenticatedLobbyLobbyIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFormationRoute: AuthenticatedFormationRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedPlayRoute: AuthenticatedPlayRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedLobbyLobbyIdRoute: AuthenticatedLobbyLobbyIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
