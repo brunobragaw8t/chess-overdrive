@@ -80,9 +80,10 @@ export function DropdownMenu({ trigger, items, align = "end" }: DropdownMenuProp
           <div className="py-1">
             {items.map((item, i) => (
               <>
-                {i > 0 && <div className="border-border mx-3 my-1 border-t" />}
+                {i > 0 && <div key={i} className="border-border mx-3 my-1 border-t" />}
 
                 <button
+                  key={item.label}
                   type="button"
                   role="menuitem"
                   onClick={() => {
