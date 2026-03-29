@@ -153,7 +153,7 @@ export function GameBoard({ game, gameId, submitMove }: GameBoardProps) {
     setValidMoves([]);
   }
 
-  const rows = Array.from({ length: 8 }, (_, i) => (isFlipped ? 7 - i : i));
+  const rows = Array.from({ length: 8 }, (_, i) => (isFlipped ? i : 7 - i));
   const cols = Array.from({ length: 8 }, (_, i) => (isFlipped ? 7 - i : i));
 
   return (

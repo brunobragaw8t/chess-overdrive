@@ -177,11 +177,11 @@ describe("GamePage", () => {
 
     const squares = screen.getAllByTestId(/^square-/);
 
-    // First square rendered should be 7-7 (top-left from black's view)
-    expect(squares[0].getAttribute("data-testid")).toBe("square-7-7");
+    // First square rendered should be 0-7 (top-left from black's view)
+    expect(squares[0].getAttribute("data-testid")).toBe("square-0-7");
 
-    // Last square rendered should be 0-0 (bottom-right from black's view)
-    expect(squares[63].getAttribute("data-testid")).toBe("square-0-0");
+    // Last square rendered should be 7-0 (bottom-right from black's view)
+    expect(squares[63].getAttribute("data-testid")).toBe("square-7-0");
   });
 
   it("highlights valid moves when clicking a friendly piece on your turn", async () => {
