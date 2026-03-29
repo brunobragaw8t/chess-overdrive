@@ -1,7 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { applyMove } from "../src/engine/game";
-import type { GameState, Move, Position } from "../src/engine/types";
+import type { Color, GameState, Move, Position } from "../src/engine/types";
 import { mutation, query } from "./_generated/server";
 import { authGuard } from "./users";
 import { collectiblePieceTypeValidator } from "./validators";
@@ -20,10 +20,13 @@ export const getGame = query({
     const whitePlayer = await ctx.db.get(game.whitePlayerId);
     const blackPlayer = await ctx.db.get(game.blackPlayerId);
 
+    const callerColor: Color = userId === game.whitePlayerId ? "white" : "black";
+
     return {
       ...game,
       whitePlayerName: whitePlayer?.name ?? "Unknown",
       blackPlayerName: blackPlayer?.name ?? "Unknown",
+      callerColor,
     };
   },
 });
