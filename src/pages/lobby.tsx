@@ -21,9 +21,9 @@ export function PageLobby() {
 
   const joinLobby = useMutation(api.lobbies.joinLobby);
   const joinAttempted = useRef(false);
-  const handleJoin = useCallback(() => {
+  const handleJoin = useCallback(async () => {
     try {
-      joinLobby({ lobbyId });
+      await joinLobby({ lobbyId });
     } catch (e) {
       if (e instanceof ConvexError) {
         setError(e.message);

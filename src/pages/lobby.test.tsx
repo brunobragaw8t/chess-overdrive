@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import { ConvexError } from "convex/values";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
@@ -173,7 +174,7 @@ describe("LobbyPage", () => {
   it("shows error when joinLobby fails", async () => {
     mockQueryValues.set(GET_CURRENT_USER, { name: "Bob", avatarUrl: null });
 
-    const joinMock = vi.fn().mockRejectedValue(new Error("Lobby is not available"));
+    const joinMock = vi.fn().mockRejectedValue(new ConvexError("Lobby is not available"));
     mockMutationFns.set(JOIN_LOBBY, joinMock);
 
     mockQueryValues.set(GET_LOBBY, {
