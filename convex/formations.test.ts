@@ -4,7 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
 import { PIECE_TYPES } from "../src/constants/pieces";
-import { seedPlayer } from "./test-helpers";
+import { seedPlayer } from "./testHelpers";
 
 let t: ReturnType<typeof convexTest>;
 

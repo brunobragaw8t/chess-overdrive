@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
-import { seedPlayer } from "./test-helpers";
+import { seedPlayer } from "./testHelpers";
 
 let t: ReturnType<typeof convexTest>;
 

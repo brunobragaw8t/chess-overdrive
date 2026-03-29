@@ -13,8 +13,9 @@ import type * as formations from "../formations.js";
 import type * as games from "../games.js";
 import type * as http from "../http.js";
 import type * as lobbies from "../lobbies.js";
-import type * as pieceTypes from "../pieceTypes.js";
+import type * as testHelpers from "../testHelpers.js";
 import type * as users from "../users.js";
+import type * as validators from "../validators.js";
 
 import type {
   ApiFromModules,
@@ -28,8 +29,9 @@ declare const fullApi: ApiFromModules<{
   games: typeof games;
   http: typeof http;
   lobbies: typeof lobbies;
-  pieceTypes: typeof pieceTypes;
+  testHelpers: typeof testHelpers;
   users: typeof users;
+  validators: typeof validators;
 }>;
 
 /**
