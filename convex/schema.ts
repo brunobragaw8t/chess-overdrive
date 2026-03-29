@@ -44,7 +44,9 @@ const schema = defineSchema({
     guestUserId: v.optional(v.id("users")),
     status: v.union(v.literal("waiting"), v.literal("active"), v.literal("finished")),
     gameId: v.optional(v.id("games")),
-  }).index("by_hostUserId", ["hostUserId"]),
+  })
+    .index("by_hostUserId", ["hostUserId"])
+    .index("by_gameId", ["gameId"]),
 
   games: defineTable({
     whitePlayerId: v.id("users"),
