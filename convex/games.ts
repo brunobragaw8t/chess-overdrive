@@ -2,7 +2,9 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { applyMove } from "../src/engine/game";
 import type { Color, GameState, Move, Position } from "../src/engine/types";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { BOT_EMAIL } from "./botPlayer";
 import { authGuard } from "./users";
 import { collectiblePieceTypeValidator } from "./validators";
 
@@ -100,6 +102,20 @@ export const submitMove = mutation({
 
       if (lobby) {
         await ctx.db.patch(lobby._id, { status: "finished" });
+      }
+    }
+
+    // Schedule bot move if the next turn belongs to the bot
+    if (newState.status === "active") {
+      const nextPlayerId =
+        newState.currentTurn === "white" ? game.whitePlayerId : game.blackPlayerId;
+
+      const nextPlayer = await ctx.db.get(nextPlayerId);
+
+      if (nextPlayer?.email === BOT_EMAIL) {
+        await ctx.scheduler.runAfter(500, internal.botPlayer.makeBotMove, {
+          gameId: args.gameId,
+        });
       }
     }
   },

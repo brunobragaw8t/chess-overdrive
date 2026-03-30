@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as botPlayer from "../botPlayer.js";
 import type * as formations from "../formations.js";
 import type * as games from "../games.js";
 import type * as http from "../http.js";
@@ -25,6 +26,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  botPlayer: typeof botPlayer;
   formations: typeof formations;
   games: typeof games;
   http: typeof http;

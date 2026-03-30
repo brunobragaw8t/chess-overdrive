@@ -7,8 +7,9 @@ import { Button } from "../components/ui/button";
 import { MonoLabel } from "../components/ui/mono-label";
 
 export function PagePlay() {
-  const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
+
+  const [isCreating, setIsCreating] = useState(false);
   const createLobby = useMutation(api.lobbies.createLobby);
 
   async function handleCreate() {
@@ -21,6 +22,22 @@ export function PagePlay() {
       setIsCreating(false);
     }
   }
+
+  const [isCreatingBot, setIsCreatingBot] = useState(false);
+  const createBotGame = useMutation(api.lobbies.createBotGame);
+
+  async function handleCreateBot() {
+    setIsCreatingBot(true);
+
+    try {
+      const gameId = await createBotGame();
+      navigate({ to: "/game/$gameId", params: { gameId } });
+    } catch {
+      setIsCreatingBot(false);
+    }
+  }
+
+  const isBusy = isCreating || isCreatingBot;
 
   return (
     <>
@@ -47,13 +64,15 @@ export function PagePlay() {
           Host plays white. Guest plays black.
         </p>
 
-        <Button
-          onClick={handleCreate}
-          disabled={isCreating}
-          className="animate-stamp-delay-3 px-12 py-5 text-[15px]"
-        >
-          {isCreating ? "Creating..." : "Create lobby"}
-        </Button>
+        <div className="animate-stamp-delay-3 flex flex-col items-center gap-4">
+          <Button onClick={handleCreate} disabled={isBusy} className="px-12 py-5 text-[15px]">
+            {isCreating ? "Creating..." : "Create lobby"}
+          </Button>
+
+          <Button variant="ghost" onClick={handleCreateBot} disabled={isBusy}>
+            {isCreatingBot ? "Creating..." : "Play vs Bot"}
+          </Button>
+        </div>
       </main>
     </>
   );

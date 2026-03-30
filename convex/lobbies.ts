@@ -1,7 +1,9 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
+import { BOT_FORMATION } from "../src/engine/bot";
 import { initGame } from "../src/engine/game";
 import type { Formation } from "../src/engine/types";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
@@ -80,6 +82,36 @@ export const joinLobby = mutation({
 
     await ctx.db.patch(lobby._id, {
       guestUserId: user._id,
+      status: "active",
+      gameId,
+    });
+
+    return gameId;
+  },
+});
+
+export const createBotGame = mutation({
+  args: {},
+  handler: async (ctx): Promise<Id<"games">> => {
+    const user = await authGuard(ctx);
+
+    const botUserId = await ctx.runMutation(internal.botPlayer.ensureBotUser);
+
+    const humanFormation = await resolveFormation(ctx, user._id);
+    const botFormation: Formation = BOT_FORMATION;
+
+    const gameState = initGame(humanFormation, botFormation);
+
+    const gameId = await ctx.db.insert("games", {
+      whitePlayerId: user._id,
+      blackPlayerId: botUserId,
+      ...gameState,
+      createdAt: Date.now(),
+    });
+
+    await ctx.db.insert("lobbies", {
+      hostUserId: user._id,
+      guestUserId: botUserId,
       status: "active",
       gameId,
     });
