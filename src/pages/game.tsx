@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
+import { useEffect } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { AppHeader } from "../components/app-header";
@@ -15,6 +16,20 @@ export function PageGame() {
   const game = useQuery(api.games.getGame, { gameId });
 
   const submitMove = useMutation(api.games.submitMove);
+
+  const heartbeat = useMutation(api.games.heartbeat);
+
+  useEffect(() => {
+    if (!game || game.status !== "active") return;
+
+    heartbeat({ gameId });
+
+    const interval = setInterval(() => {
+      heartbeat({ gameId });
+    }, 10_000);
+
+    return () => clearInterval(interval);
+  }, [game, gameId, heartbeat]);
 
   if (game === undefined) {
     return <LoadingSpinner label="LOADING_GAME" />;

@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { seedPlayer } from "./testHelpers";
 
@@ -253,6 +253,90 @@ describe("submitMove", () => {
         to: [7, 0],
       }),
     ).rejects.toThrow("Promotion piece type required");
+  });
+});
+
+describe("heartbeat", () => {
+  it("rejects unauthenticated calls", async () => {
+    const { gameId } = await seedGame();
+
+    await expect(t.mutation(api.games.heartbeat, { gameId })).rejects.toThrow("Not authenticated");
+  });
+
+  it("updates whiteLastSeenAt when called by white player", async () => {
+    const { gameId, asAlice } = await seedGame();
+
+    await asAlice.mutation(api.games.heartbeat, { gameId });
+
+    const game = await asAlice.query(api.games.getGame, { gameId });
+    expect(game!.whiteLastSeenAt).toBeTypeOf("number");
+    expect(game!.whiteLastSeenAt).toBeGreaterThan(0);
+  });
+
+  it("updates blackLastSeenAt when called by black player", async () => {
+    const { gameId, asBob } = await seedGame();
+
+    await asBob.mutation(api.games.heartbeat, { gameId });
+
+    const game = await asBob.query(api.games.getGame, { gameId });
+    expect(game!.blackLastSeenAt).toBeTypeOf("number");
+    expect(game!.blackLastSeenAt).toBeGreaterThan(0);
+  });
+});
+
+describe("checkDisconnect", () => {
+  it("forfeits current-turn player when lastSeenAt > 60s", async () => {
+    const { gameId, asAlice } = await seedGame();
+
+    // Set white's lastSeenAt to 61 seconds ago (white's turn by default)
+    const staleTime = Date.now() - 61_000;
+    await t.run(async (ctx) => {
+      await ctx.db.patch(gameId, {
+        whiteLastSeenAt: staleTime,
+        blackLastSeenAt: Date.now(),
+      });
+    });
+
+    await t.mutation(internal.games.checkDisconnect, { gameId });
+
+    const game = await asAlice.query(api.games.getGame, { gameId });
+    expect(game!.status).toBe("finished");
+    expect(game!.result).toBe("black_wins");
+  });
+
+  it("does nothing if lastSeenAt is within 60s", async () => {
+    const { gameId, asAlice } = await seedGame();
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(gameId, {
+        whiteLastSeenAt: Date.now(),
+        blackLastSeenAt: Date.now(),
+      });
+    });
+
+    await t.mutation(internal.games.checkDisconnect, { gameId });
+
+    const game = await asAlice.query(api.games.getGame, { gameId });
+    expect(game!.status).toBe("active");
+  });
+
+  it("is a no-op for finished games", async () => {
+    const { gameId, asAlice } = await seedGame();
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(gameId, {
+        status: "finished",
+        result: "white_wins",
+        whiteLastSeenAt: Date.now() - 120_000,
+      });
+    });
+
+    // Should not throw or change anything
+    await t.mutation(internal.games.checkDisconnect, { gameId });
+
+    const game = await asAlice.query(api.games.getGame, { gameId });
+    expect(game!.status).toBe("finished");
+    expect(game!.result).toBe("white_wins"); // unchanged
   });
 });
 

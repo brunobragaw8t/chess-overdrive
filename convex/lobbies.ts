@@ -73,16 +73,25 @@ export const joinLobby = mutation({
 
     const gameState = initGame(whiteFormation, blackFormation);
 
+    const now = Date.now();
+
     const gameId = await ctx.db.insert("games", {
       whitePlayerId: lobby.hostUserId,
       blackPlayerId: user._id,
       ...gameState,
-      createdAt: Date.now(),
+      whiteLastSeenAt: now,
+      blackLastSeenAt: now,
+      createdAt: now,
     });
 
     await ctx.db.patch(lobby._id, {
       guestUserId: user._id,
       status: "active",
+      gameId,
+    });
+
+    // Schedule disconnect checker for PvP games
+    await ctx.scheduler.runAfter(15_000, internal.games.checkDisconnect, {
       gameId,
     });
 

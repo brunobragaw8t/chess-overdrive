@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { applyMove } from "../src/engine/game";
 import type { Color, GameState, Move, Position } from "../src/engine/types";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { BOT_EMAIL } from "./botPlayer";
 import { authGuard } from "./users";
 import { collectiblePieceTypeValidator } from "./validators";
@@ -117,6 +117,68 @@ export const submitMove = mutation({
           gameId: args.gameId,
         });
       }
+    }
+  },
+});
+
+const DISCONNECT_TIMEOUT_MS = 60_000;
+const DISCONNECT_CHECK_INTERVAL_MS = 15_000;
+
+export const checkDisconnect = internalMutation({
+  args: {
+    gameId: v.id("games"),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId);
+    if (!game || game.status !== "active") return;
+
+    const now = Date.now();
+    const currentTurnLastSeenAt =
+      game.currentTurn === "white" ? game.whiteLastSeenAt : game.blackLastSeenAt;
+
+    if (currentTurnLastSeenAt !== undefined && now - currentTurnLastSeenAt > DISCONNECT_TIMEOUT_MS) {
+      const result = game.currentTurn === "white" ? "black_wins" : "white_wins";
+
+      await ctx.db.patch(args.gameId, {
+        status: "finished",
+        result,
+      });
+
+      const lobby = await ctx.db
+        .query("lobbies")
+        .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+        .first();
+
+      if (lobby) {
+        await ctx.db.patch(lobby._id, { status: "finished" });
+      }
+
+      return;
+    }
+
+    // Re-schedule while game is still active
+    await ctx.scheduler.runAfter(DISCONNECT_CHECK_INTERVAL_MS, internal.games.checkDisconnect, {
+      gameId: args.gameId,
+    });
+  },
+});
+
+export const heartbeat = mutation({
+  args: {
+    gameId: v.id("games"),
+  },
+  handler: async (ctx, args) => {
+    const user = await authGuard(ctx);
+
+    const game = await ctx.db.get(args.gameId);
+    if (!game || game.status !== "active") return;
+
+    const now = Date.now();
+
+    if (user._id === game.whitePlayerId) {
+      await ctx.db.patch(args.gameId, { whiteLastSeenAt: now });
+    } else if (user._id === game.blackPlayerId) {
+      await ctx.db.patch(args.gameId, { blackLastSeenAt: now });
     }
   },
 });

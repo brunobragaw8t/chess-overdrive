@@ -10,6 +10,7 @@ import type { Board, Color, Formation, GameResult, GameStatus } from "../engine/
 
 const GET_GAME = Symbol("getGame");
 const SUBMIT_MOVE = Symbol("submitMove");
+const HEARTBEAT = Symbol("heartbeat");
 const GET_CURRENT_USER = Symbol("getCurrentUser");
 
 // ---------------------------------------------------------------------------
@@ -107,6 +108,7 @@ vi.mock("../../convex/_generated/api", () => ({
     games: {
       getGame: GET_GAME,
       submitMove: SUBMIT_MOVE,
+      heartbeat: HEARTBEAT,
     },
     users: {
       getCurrentUser: GET_CURRENT_USER,
@@ -386,5 +388,47 @@ describe("GamePage", () => {
     render(<PageGame />);
 
     expect(screen.getByText(/loading/i)).toBeDefined();
+  });
+
+  it("calls heartbeat mutation on interval while game is active", () => {
+    vi.useFakeTimers();
+
+    mockQueryValues.set(GET_CURRENT_USER, { name: "Alice", avatarUrl: null });
+    mockQueryValues.set(GET_GAME, makeGameData({ status: "active" }));
+
+    const heartbeatMock = vi.fn();
+    mockMutationFns.set(HEARTBEAT, heartbeatMock);
+
+    render(<PageGame />);
+
+    // Heartbeat should fire immediately on mount
+    expect(heartbeatMock).toHaveBeenCalledTimes(1);
+
+    // Advance 10 seconds — second heartbeat
+    vi.advanceTimersByTime(10_000);
+    expect(heartbeatMock).toHaveBeenCalledTimes(2);
+
+    // Advance another 10 seconds — third heartbeat
+    vi.advanceTimersByTime(10_000);
+    expect(heartbeatMock).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
+  });
+
+  it("stops heartbeat when game is finished", () => {
+    vi.useFakeTimers();
+
+    mockQueryValues.set(GET_CURRENT_USER, { name: "Alice", avatarUrl: null });
+    mockQueryValues.set(GET_GAME, makeGameData({ status: "finished", result: "white_wins" }));
+
+    const heartbeatMock = vi.fn();
+    mockMutationFns.set(HEARTBEAT, heartbeatMock);
+
+    render(<PageGame />);
+
+    vi.advanceTimersByTime(30_000);
+    expect(heartbeatMock).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
