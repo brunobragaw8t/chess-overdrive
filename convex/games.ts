@@ -6,7 +6,7 @@ import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { BOT_EMAIL } from "./botPlayer";
 import { authGuard } from "./users";
-import { collectiblePieceTypeValidator } from "./validators";
+import { collectiblePieceTypeValidator, gameResultValidator } from "./validators";
 
 export const getGame = query({
   args: {
@@ -30,6 +30,31 @@ export const getGame = query({
       blackPlayerName: blackPlayer?.name ?? "Unknown",
       callerColor,
     };
+  },
+});
+
+export const endGame = internalMutation({
+  args: {
+    gameId: v.id("games"),
+    result: gameResultValidator,
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId);
+    if (!game || game.status === "finished") return;
+
+    await ctx.db.patch(args.gameId, {
+      status: "finished",
+      result: args.result,
+    });
+
+    const lobby = await ctx.db
+      .query("lobbies")
+      .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
+      .first();
+
+    if (lobby) {
+      await ctx.db.patch(lobby._id, { status: "finished" });
+    }
   },
 });
 
@@ -88,21 +113,15 @@ export const submitMove = mutation({
     await ctx.db.patch(args.gameId, {
       board: newState.board,
       currentTurn: newState.currentTurn,
-      status: newState.status,
-      result: newState.result,
       lastMoveFrom: [...args.from],
       lastMoveTo: [...args.to],
     });
 
     if (newState.status === "finished") {
-      const lobby = await ctx.db
-        .query("lobbies")
-        .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
-        .first();
-
-      if (lobby) {
-        await ctx.db.patch(lobby._id, { status: "finished" });
-      }
+      await ctx.runMutation(internal.games.endGame, {
+        gameId: args.gameId,
+        result: newState.result!,
+      });
     }
 
     // Schedule bot move if the next turn belongs to the bot
@@ -139,19 +158,10 @@ export const checkDisconnect = internalMutation({
     if (currentTurnLastSeenAt !== undefined && now - currentTurnLastSeenAt > DISCONNECT_TIMEOUT_MS) {
       const result = game.currentTurn === "white" ? "black_wins" : "white_wins";
 
-      await ctx.db.patch(args.gameId, {
-        status: "finished",
+      await ctx.runMutation(internal.games.endGame, {
+        gameId: args.gameId,
         result,
       });
-
-      const lobby = await ctx.db
-        .query("lobbies")
-        .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
-        .first();
-
-      if (lobby) {
-        await ctx.db.patch(lobby._id, { status: "finished" });
-      }
 
       return;
     }

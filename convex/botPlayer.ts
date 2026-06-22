@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { applyMove } from "../src/engine/game";
 import type { GameState } from "../src/engine/types";
 import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
 import { BOT_FORMATION, pickBotMove } from "../src/engine/bot";
 
@@ -90,21 +91,15 @@ export const makeBotMove = internalMutation({
     await ctx.db.patch(args.gameId, {
       board: newState.board,
       currentTurn: newState.currentTurn,
-      status: newState.status,
-      result: newState.result,
       lastMoveFrom: [...move.from],
       lastMoveTo: [...move.to],
     });
 
     if (newState.status === "finished") {
-      const lobby = await ctx.db
-        .query("lobbies")
-        .withIndex("by_gameId", (q) => q.eq("gameId", args.gameId))
-        .first();
-
-      if (lobby) {
-        await ctx.db.patch(lobby._id, { status: "finished" });
-      }
+      await ctx.runMutation(internal.games.endGame, {
+        gameId: args.gameId,
+        result: newState.result!,
+      });
     }
   },
 });

@@ -340,5 +340,39 @@ describe("checkDisconnect", () => {
   });
 });
 
+describe("endGame", () => {
+  it("sets game status to finished with the correct result", async () => {
+    const { gameId, asAlice } = await seedGame();
+
+    await t.mutation(internal.games.endGame, { gameId, result: "white_wins" });
+
+    const game = await asAlice.query(api.games.getGame, { gameId });
+    expect(game!.status).toBe("finished");
+    expect(game!.result).toBe("white_wins");
+  });
+
+  it("sets the associated lobby status to finished", async () => {
+    const { gameId, lobbyId, asAlice } = await seedGame();
+
+    await t.mutation(internal.games.endGame, { gameId, result: "black_wins" });
+
+    const lobby = await asAlice.query(api.lobbies.getLobby, { lobbyId });
+    expect(lobby!.status).toBe("finished");
+  });
+
+  it("is a no-op when called on an already-finished game", async () => {
+    const { gameId, asAlice } = await seedGame();
+
+    await t.mutation(internal.games.endGame, { gameId, result: "white_wins" });
+
+    // Call again — should not throw or change anything
+    await t.mutation(internal.games.endGame, { gameId, result: "black_wins" });
+
+    const game = await asAlice.query(api.games.getGame, { gameId });
+    expect(game!.status).toBe("finished");
+    expect(game!.result).toBe("white_wins"); // first result preserved
+  });
+});
+
 // @ts-ignore
 const modules = import.meta.glob("./**/*.ts");
